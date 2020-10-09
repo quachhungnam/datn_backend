@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
+
 # class UserViewSet(viewsets.ModelViewSet):
 #     """
 #     API endpoint that allows users to be viewed or edited.
@@ -23,7 +24,7 @@ class UserViewSet(APIView):
     """
     List all snippets, or create a new snippet.
     """
-    
+
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
