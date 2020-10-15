@@ -4,11 +4,12 @@ from django.urls import path, include
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView)
-
+from appaccount.views import CheckExpireToken
 from appaccount.tokenserializiers import(MyTokenObtainPairView)
 
 
 urlpatterns = [
+    path('api/checktoken/', CheckExpireToken.as_view(), name='hello'),
     path('admin/', admin.site.urls),
     path('api/', include('appaccount.urls')),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),

@@ -1,6 +1,8 @@
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, TokenVerifySerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

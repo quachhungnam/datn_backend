@@ -10,4 +10,5 @@ class User(AbstractUser):
     birthday = models.DateField(blank=True, null=True)
     phone_number = models.CharField(default='', null=True, max_length=15)
 
-
+    class Meta:
+        db_table = 'user'
