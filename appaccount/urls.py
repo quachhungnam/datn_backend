@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from appaccount import views
+from appaccount.views import UserView, UserDetail
 from rest_framework.urlpatterns import format_suffix_patterns
 
 # router = routers.DefaultRouter()
@@ -11,7 +11,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     # path('', include(router.urls)),
-    path('users/', views.UserViewSet.as_view()),
+    path('users/<int:pk>/', UserDetail.as_view()),
+    path('users/', UserView.as_view()),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)

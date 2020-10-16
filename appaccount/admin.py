@@ -4,7 +4,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from appaccount.models import User as CustomUser
-# from appmarks.models import Teacher, Student
+from appmarks.models import Teacher, Student, Classes, Conduct, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture
 from django.contrib.auth.forms import UserChangeForm
 from appaccount.forms import CustomUserCreationForm
 # Register your models here.
@@ -20,8 +20,16 @@ class CustomUserAdmin(BaseUserAdmin):
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
-# admin.site.register(Teacher)
-# admin.site.register(Student)
+admin.site.register(Teacher)
+admin.site.register(Student)
+admin.site.register(Classes)
+admin.site.register(Lecture)
+admin.site.register(Department)
+admin.site.register(Conduct)
+admin.site.register(Subject)
+admin.site.register(SchoolYear)
+admin.site.register(Marks)
+admin.site.register(MarksRegulary)
 
 # class AuthorAdmin(admin.ModelAdmin):
 #     pass

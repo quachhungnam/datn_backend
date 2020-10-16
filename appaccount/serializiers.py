@@ -8,9 +8,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = [ 'id','username', 'email', 'groups',]
+        fields = ['id', 'username', 'first_name', 'last_name',
+                  'gender', 'birthday', 'email', 'phone_number']
         # fields = '__all__'
-
 
 
 class ChangePasswordSerializer(serializers.Serializer):

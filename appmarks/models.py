@@ -12,16 +12,22 @@ class Department(models.Model):  # bo mon, bo phan, to^~ nao
     introduction = models.TextField(default='')
 
     class Meta:
-        db_table = 'deparment'
+        db_table = 'department'
+
+    def __str__(self):
+        return str(self.department_name)
 
 
 class Teacher(models.Model):  # Giao vien
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True)
-    deparment = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
+    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
 
     class Meta:
         db_table = 'teacher'
+
+    def __str__(self):
+        return str(self.user)
 
 
 class SchoolYear(models.Model):  # Nam hoc
@@ -31,6 +37,9 @@ class SchoolYear(models.Model):  # Nam hoc
 
     class Meta:
         db_table = 'schoolyear'
+
+    def __str__(self):
+        return str(self.from_year) + ' - ' + str(self.to_year)
 
 
 class Classes(models.Model):  # Lop sinh hoat
@@ -43,6 +52,9 @@ class Classes(models.Model):  # Lop sinh hoat
     class Meta:
         db_table = 'classes'
 
+    def __str__(self):
+        return str(self.class_name)
+
 
 class Student(models.Model):  # Hoc sinh
     user = models.OneToOneField(
@@ -51,6 +63,9 @@ class Student(models.Model):  # Hoc sinh
 
     class Meta:
         db_table = 'student'
+
+    def __str__(self):
+        return str(self.user)
 
 
 class Conduct(models.Model):  # hoc sinh thuoc lop' hoc nao, hanh kiem
@@ -64,6 +79,9 @@ class Conduct(models.Model):  # hoc sinh thuoc lop' hoc nao, hanh kiem
     class Meta:
         db_table = 'conduct'
 
+    def __str__(self):
+        return str(self.student) + " - " + str(self.classes)
+
 
 class Subject(models.Model):  # cac mon hoc
     id = models.BigAutoField(primary_key=True)
@@ -74,6 +92,9 @@ class Subject(models.Model):  # cac mon hoc
     class Meta:
         db_table = 'subject'
 
+    def __str__(self):
+        return self.subject_name
+
 
 class Lecture(models.Model):  # Giao vien day nhung mon nao
     id = models.BigAutoField(primary_key=True)
@@ -83,6 +104,9 @@ class Lecture(models.Model):  # Giao vien day nhung mon nao
 
     class Meta:
         db_table = 'lecture'
+
+    def __str__(self):
+        return str(self.teacher) + ' - '+str(self.subject)
 
 
 # class LectureClass(models.Model):
@@ -120,6 +144,9 @@ class Marks(models.Model):
     class Meta:
         db_table = 'marks'
 
+    def __str__(self):
+        return str(self.student)
+
 
 class MarksRegulary(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -133,6 +160,8 @@ class MarksRegulary(models.Model):
     class Meta:
         db_table = 'marksregulary'
 
+    # def __str__(self):
+    #     return self.marks_ref
 # class Department(models.Model):  # Bo mon, bo phan
 #     id = models.AutoField(primary_key=True)
 #     department_name = models.CharField(max_length=100)

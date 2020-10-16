@@ -9,9 +9,13 @@ from appaccount.tokenserializiers import(MyTokenObtainPairView)
 
 
 urlpatterns = [
-    path('api/checktoken/', CheckExpireToken.as_view(), name='hello'),
     path('admin/', admin.site.urls),
-    path('api/', include('appaccount.urls')),
+    path('api/checktoken/', CheckExpireToken.as_view(),
+         name='hello'),  # check token validate
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Api USER
+    path('api/', include('appaccount.urls')),
+    path('api/', include('appmarks.urls')),
+
 ]
