@@ -9,6 +9,7 @@ class User(AbstractUser):
     gender = models.BooleanField(null=True)
     birthday = models.DateField(blank=True, null=True)
     phone_number = models.CharField(default='', null=True, max_length=15)
+    address = models.CharField(max_length=200, default='', null=True)
 
     class Meta:
         db_table = 'user'

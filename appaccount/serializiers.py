@@ -9,7 +9,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name',
-                  'gender', 'birthday', 'email', 'phone_number']
+                  'gender', 'birthday', 'email', 'phone_number', 'address']
         # fields = '__all__'
 
 
