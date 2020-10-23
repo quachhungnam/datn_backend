@@ -1,7 +1,7 @@
 from django.shortcuts import render
 # Create your views here.
 from appaccount.models import User
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from rest_framework import permissions
 from appaccount.serializiers import UserSerializer, ChangePasswordSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -27,7 +27,7 @@ class UserView(APIView):
     def get(self, request, format=None):
         users = User.objects.all()
         serializer = UserSerializer(
-            users, many=True,)
+            users, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
@@ -48,7 +48,7 @@ class UserDetail(APIView):
 
     def get(self, request, pk, format=None):
         user = self.get_object(pk)
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
@@ -65,7 +65,7 @@ class UserDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ChangePasswordView(APIView):
+class ChangePasswordView(generics.UpdateAPIView):
     """
     An endpoint for changing password.
     """
@@ -94,3 +94,6 @@ class ChangePasswordView(APIView):
                 'message': 'Password updated successfully',
                 'data': []
             }
+            return Response(response)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

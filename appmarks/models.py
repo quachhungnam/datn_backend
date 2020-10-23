@@ -21,13 +21,14 @@ class Department(models.Model):  # bo mon, bo phan, to^~ nao
 class Teacher(models.Model):  # Giao vien
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True)
-    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
+    department = models.ForeignKey(
+        Department, on_delete=models.DO_NOTHING, related_name='teacher')
 
     class Meta:
         db_table = 'teacher'
 
     def __str__(self):
-        return str(self.user)
+        return str(self.user)+'('+str(self.user.first_name)+' '+str(self.user.last_name)+')'
 
 
 class SchoolYear(models.Model):  # Nam hoc
@@ -39,13 +40,14 @@ class SchoolYear(models.Model):  # Nam hoc
         db_table = 'schoolyear'
 
     def __str__(self):
-        return str(self.from_year) + ' - ' + str(self.to_year)
+        return str(self.from_year.year) + ' - ' + str(self.to_year.year)
 
 
 class Classes(models.Model):  # Lop sinh hoat
     id = models.BigAutoField(primary_key=True)
     class_name = models.CharField(null=False, max_length=10)
-    school_year = models.ForeignKey(SchoolYear, on_delete=models.DO_NOTHING)
+    school_year = models.ForeignKey(
+        SchoolYear, on_delete=models.DO_NOTHING, related_name="classes")
     form_teacher = models.ForeignKey(
         Teacher, on_delete=models.DO_NOTHING)  # GV chu nhiem
 
@@ -53,7 +55,7 @@ class Classes(models.Model):  # Lop sinh hoat
         db_table = 'classes'
 
     def __str__(self):
-        return str(self.class_name)
+        return str(self.class_name)+' / '+str(self.school_year)
 
 
 class Student(models.Model):  # Hoc sinh
@@ -72,12 +74,16 @@ class Conduct(models.Model):  # hoc sinh thuoc lop' hoc nao, hanh kiem
     id = models.BigAutoField(primary_key=True)
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
     classes = models.ForeignKey(Classes, on_delete=models.DO_NOTHING)
-    conduct_stsemester = models.IntegerField()  # hanh kiem hoc ky 1
-    conduct_ndsemester = models.IntegerField()  # hanh kiem hoc ky 2
-    conduct_gpasemester = models.IntegerField()  # hanh kiem ca nam
+    conduct_stsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 1
+    conduct_ndsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 2
+    conduct_gpasemester = models.IntegerField(null=True)  # hanh kiem ca nam
 
     class Meta:
         db_table = 'conduct'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'classes'], name='unique_student_class')
+        ]
 
     def __str__(self):
         return str(self.student) + " - " + str(self.classes)
@@ -93,7 +99,7 @@ class Subject(models.Model):  # cac mon hoc
         db_table = 'subject'
 
     def __str__(self):
-        return self.subject_name
+        return self.subject_name + '/' + str(self.level)
 
 
 class Lecture(models.Model):  # Giao vien day nhung mon nao
@@ -101,28 +107,25 @@ class Lecture(models.Model):  # Giao vien day nhung mon nao
     teacher = models.ForeignKey(Teacher, on_delete=models.DO_NOTHING)
     subject = models.ForeignKey(Subject, on_delete=models.DO_NOTHING)
     classes = models.ForeignKey(Classes, on_delete=models.DO_NOTHING)
+    # classs = models.ForeignKey
 
     class Meta:
         db_table = 'lecture'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['teacher', 'subject', 'classes'], name='unique_lecture')
+        ]
 
     def __str__(self):
         return str(self.teacher) + ' - '+str(self.subject)
 
 
-# class LectureClass(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     lecture = models.ForeignKey(Lecture, on_delete=models.DO_NOTHING)
-#     classes = models.ForeignKey(Classes, on_delete=models.DO_NOTHING)
-
-#     class Meta:
-#         db_table = 'lectureclass'
-
-
 class Marks(models.Model):
     id = models.BigAutoField(primary_key=True)
-    student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
+    student = models.ForeignKey(
+        Student, on_delete=models.DO_NOTHING, related_name='marks')
     lecture = models.ForeignKey(
-        Lecture, on_delete=models.DO_NOTHING)
+        Lecture, on_delete=models.DO_NOTHING, related_name='marks_lec')
     # school_year = models.ForeignKey(SchoolYear, on_delete=models.DO_NOTHING)
     mid_first_semester = models.DecimalField(
         max_digits=3, decimal_places=1, null=True)  # diem giua ky 1
@@ -143,6 +146,10 @@ class Marks(models.Model):
 
     class Meta:
         db_table = 'marks'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'lecture'], name='unique_student_lecture')
+        ]
 
     def __str__(self):
         return str(self.student)
@@ -159,93 +166,3 @@ class MarksRegulary(models.Model):
 
     class Meta:
         db_table = 'marksregulary'
-
-    # def __str__(self):
-    #     return self.marks_ref
-# class Department(models.Model):  # Bo mon, bo phan
-#     id = models.AutoField(primary_key=True)
-#     department_name = models.CharField(max_length=100)
-#     introduction = models.TextField(default='')
-
-
-# class SchoolYear(models.Model):  # Nam hoc
-#     id = models.BigAutoField(primary_key=True)
-#     start_year = models.CharField(max_length=4)
-#     end_year = models.CharField(max_length=4)
-
-
-# class Teacher(models.Model):  # Giao vien
-#     user = models.OneToOneField(
-#         User, on_delete=models.CASCADE, primary_key=True)
-#     deparment = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
-
-
-# class Classes(models.Model):  # Lop sinh hoat
-#     id = models.BigAutoField(primary_key=True)
-#     classes_name = models.CharField(null=False, max_length=10)
-#     form_teacher = models.ForeignKey(
-#         Teacher, on_delete=models.DO_NOTHING)  # Giao vien chu nhiem
-#     school_year = models.CharField(null=False, max_length=10)
-
-
-# class Student(models.Model):  # Hoc sinh
-#     user = models.OneToOneField(
-#         User, on_delete=models.CASCADE, primary_key=True)
-#     classes = models.ForeignKey(Classes, on_delete=models.DO_NOTHING)
-
-
-# class Conduct(models.Model):  # Hanh kiem
-#     id = models.BigAutoField(primary_key=True)
-#     student_id = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
-#     shoolyear = models.ForeignKey(SchoolYear, on_delete=models.DO_NOTHING)
-#     semester_first = models.IntegerField()
-#     semester_second = models.IntegerField()
-
-
-# class Lecture(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     teacher_id = models.ForeignKey(Teacher, on_delete=models.DO_NOTHING)
-#     pass
-
-
-# class DGTX(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     pass
-
-
-# class Semester(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     schoolyear = models.ForeignKey(SchoolYear, on_delete=models.DO_NOTHING)
-#     semester_name = models.CharField(max_length=10)
-#     start_week = models.CharField(max_length=3)
-#     end_week = models.IntegerField(max_length=3)
-#     pass
-
-
-# class Subject(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     subject_name = models.CharField(max_length=50, null=True)
-#     # teacher = models.ForeignKey(Teacher, on_delete=models.DO_NOTHING)
-#     descriptions = models.TextField(default='', null=True)
-
-
-# class Marks(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     student_id = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
-#     subject_id = models.ForeignKey(Subject, on_delete=models.DO_NOTHING)
-#     semester = models.CharField(max_length=5)  # hoc ky nam hoc
-#     school_year = models.CharField(max_length=10)
-#     half_test = models.DecimalField(
-#         max_digits=3, decimal_places=1, null=True)  # diem giua ky
-#     end_test = models.DecimalField(
-#         max_digits=3, decimal_places=1, null=True)  # diem cuoi ky
-#     everage_test = models.DecimalField(
-#         max_digits=3, decimal_places=1, default=0.0)  # diem trung binh mon
-
-
-# class MarksRegulary(models.Model):
-#     id = models.BigAutoField(primary_key=True)
-#     marks_id = models.ForeignKey(Marks, on_delete=models.DO_NOTHING)
-#     test_date = models.DateTimeField()
-#     marks = models.DecimalField(max_digits=3, decimal_places=1, default=0.0)
-#     note = models.CharField(max_length=200, default='', null=True)
