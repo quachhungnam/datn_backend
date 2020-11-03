@@ -9,10 +9,15 @@ from appmarks.views import (
     LectureList,
     StudentsOfClass,
     MarksOfClass,
-    StudentsOfClass2
+    StudentsOfClass2,
+
+    AddStudent
 )
 
 urlpatterns = [
+
+     path('uploadfile/',AddStudent.as_view()),
+
     path('departments/', DepartmentView.as_view()),
     path('departments/<int:pk>/', DepartmentDetail.as_view(),
          name='department-detail'),

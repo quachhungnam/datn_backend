@@ -28,7 +28,7 @@ class Teacher(models.Model):  # Giao vien
         db_table = 'teacher'
 
     def __str__(self):
-        return str(self.user)+'('+str(self.user.first_name)+' '+str(self.user.last_name)+')'
+        return str(self.user)
 
 
 class SchoolYear(models.Model):  # Nam hoc
@@ -55,7 +55,7 @@ class Classes(models.Model):  # Lop sinh hoat
         db_table = 'classes'
 
     def __str__(self):
-        return str(self.class_name)+' / '+str(self.school_year)
+        return str(self.class_name)
 
 
 class Student(models.Model):  # Hoc sinh
@@ -86,7 +86,7 @@ class Conduct(models.Model):  # hoc sinh thuoc lop' hoc nao, hanh kiem
         ]
 
     def __str__(self):
-        return str(self.student) + " - " + str(self.classes)
+        return str(self.student)
 
 
 class Subject(models.Model):  # cac mon hoc
@@ -99,7 +99,7 @@ class Subject(models.Model):  # cac mon hoc
         db_table = 'subject'
 
     def __str__(self):
-        return self.subject_name + '/' + str(self.level)
+        return self.subject_name + ' - '+self.level
 
 
 class Lecture(models.Model):  # Giao vien day nhung mon nao
@@ -157,7 +157,9 @@ class Marks(models.Model):
 
 class MarksRegulary(models.Model):
     id = models.BigAutoField(primary_key=True)
-    marks_ref = models.ForeignKey(Marks, on_delete=models.DO_NOTHING)
+    marks_ref = models.ForeignKey(
+        Marks, on_delete=models.DO_NOTHING, related_name='marks_regulary')
+    code_semester = models.IntegerField(null=True, default=1)
     test_date = models.DateTimeField()
     point = models.DecimalField(max_digits=3, decimal_places=1, default=0.0)
     note = models.CharField(max_length=200, default='', null=True)
@@ -166,3 +168,6 @@ class MarksRegulary(models.Model):
 
     class Meta:
         db_table = 'marksregulary'
+
+    def __str__(self):
+        return str(self.point)

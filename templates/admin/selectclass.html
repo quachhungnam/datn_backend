@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %} {% block content %}
+<form action="" method="post">
+  {% csrf_token %}
+  <p>Are you sure you want to execute this action on the selected items?</p>
+
+  <select name="setclass" id="setclass">
+    {% for aclass in all_class %}
+    <option value="{{aclass.id}}">{{ aclass }}</option>
+    {% endfor %}
+  </select>
+ 
+  <input type="hidden" name="post" value="haha" />
+  <input type="hidden" name="actions" value="add_student_class" />
+  <input type="submit" name="apply" value="Add student to Class" />
+</form>
+{% endblock %}

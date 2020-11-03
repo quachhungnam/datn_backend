@@ -11,6 +11,9 @@ from appmarks.serializiers import (
     StudentSerializer, ConductSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
 from django.http import Http404
+from rest_framework.parsers import MultiPartParser, FormParser
+import pandas as pd
+from pandas import ExcelFile
 # Create your views here.
 
 
@@ -456,8 +459,9 @@ class MarksDetail(APIView):
         serializier = MarksSerializer(marks, context={'request': request})
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         marks = self.get_object(pk)
+        # print(request.data)
         serializier = MarksSerializer(marks, data=request.data)
         if serializier.is_valid():
             serializier.save()
@@ -478,7 +482,8 @@ class MarksOfClass(generics.ListAPIView):
         # teacher = self.request.user
         # teacher = self.kwargs['teacher']
         # schoolyear = self.kwargs['schoolyear']
-        return Marks.objects.filter(lecture__id=1)
+        lecture_id = self.kwargs['lecture_id']
+        return Marks.objects.filter(lecture__id=lecture_id)
 
 
 """Diem DGTX"""
@@ -527,6 +532,30 @@ class MarksRegularyDetail(APIView):
 
 
 """Teacher"""
+
+
+class AddStudent(APIView):
+    #  @method_decorator(login_required)
+    # luu tat ca du lieu vao co so du lieu
+    parser_class = (MultiPartParser,)
+
+    def post(self, request, format=None):
+        print(request.data)
+        try:
+            # print(request.data['fileanh'])
+            # print(request.data)
+
+            f = request.data.getlist("fileanh")
+            # print(f)
+            df = pd.read_excel(
+                request.FILES['fileanh'], sheet_name=0, index_col=0)
+            # xong roi luu vao DB
+            print(df)
+
+            return Response({"success": 'success'}, status=status.HTTP_201_CREATED)
+
+        except:
+            return Response({"success": 'fail'}, status=status.HTTP_201_CREATED)
 
 
 class TeacherView(APIView):

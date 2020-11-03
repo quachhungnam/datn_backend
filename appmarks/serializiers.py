@@ -9,6 +9,7 @@ class DepartmentSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'department_name', 'introduction']
+        read_only_fields = ['id']
 
 
 class TeacherSerializer(HyperlinkedModelSerializer):
@@ -18,6 +19,7 @@ class TeacherSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Teacher
         fields = ['user', 'department']
+        read_only_fields = ['user']
 
 
 class SchoolYearSerializer(HyperlinkedModelSerializer):
@@ -26,6 +28,7 @@ class SchoolYearSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = SchoolYear
         fields = ['id', 'from_year', 'to_year', ]
+        read_only_fields = ['id']
 
 
 class ClassesSerializer(HyperlinkedModelSerializer):
@@ -35,6 +38,7 @@ class ClassesSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Classes
         fields = ['id', 'school_year', 'form_teacher', 'class_name']
+        read_only_fields = ['id']
 
 
 class StudentSerializer(HyperlinkedModelSerializer):
@@ -73,9 +77,21 @@ class LectureSerializer(HyperlinkedModelSerializer):
         fields = ['id', 'teacher', 'subject', 'classes']
 
 
+class MarksRegularySerializer(HyperlinkedModelSerializer):
+    marks_ref = PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = MarksRegulary
+        fields = ['id', 'marks_ref', 'test_date',
+                  'point', 'note', 'is_public', 'is_locked','code_semester']
+        # fields = '__all__'
+        # exclude=['url']
+
+
 class MarksSerializer(HyperlinkedModelSerializer):
-    lecture = LectureSerializer()
-    student = StudentSerializer()
+    lecture = LectureSerializer(read_only=True)
+    student = StudentSerializer(read_only=True)
+    marks_regulary = MarksRegularySerializer(many=True, read_only=True)
 
     class Meta:
         model = Marks
@@ -90,10 +106,15 @@ class MarksSerializer(HyperlinkedModelSerializer):
                   "is_public",
                   "is_locked",
                   "student",
-                  "lecture"]
+                  "lecture",
+                  "marks_regulary"
+                  ]
+        read_only_fields = ['id']
+        # extra_kwargs = {
+        #     'lecture': {'required': False},
+        #     'student': {'required': False},
+        #     'marks_regulary': {'required': False},
 
+        # }
 
-class MarksRegularySerializer(HyperlinkedModelSerializer):
-    class Meta:
-        model = MarksRegulary
-        exclude = ['url']
+        # exclude = ['url']

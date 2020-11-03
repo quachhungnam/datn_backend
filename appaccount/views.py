@@ -14,7 +14,7 @@ from rest_framework import generics
 
 
 class CheckExpireToken(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     def get(self, request):
         content = {'access': 'Token is live!'}
@@ -52,7 +52,13 @@ class UserDetail(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
+        # print('user la:')
+        # print(request)
+        # print(request.user)
+        print(request.user)
         user = self.get_object(pk)
+        # print(user)
+        # user = request.user
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()

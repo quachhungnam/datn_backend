@@ -57,11 +57,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'marksproject.urls'
-
+SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(SETTINGS_PATH, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,7 +73,9 @@ TEMPLATES = [
         },
     },
 ]
-
+TEMPLATE_DIRS = (
+    os.path.join(SETTINGS_PATH, 'templates'),
+)
 WSGI_APPLICATION = 'marksproject.wsgi.application'
 
 
@@ -93,6 +95,20 @@ DATABASES = {
         'init_command': 'SET default_storage_engine=INNODB',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'HOST': 'mymark2.ct5dawrigcux.ap-soutosystem-1.rds.amazonaws.com',
+#         'PORT': '3306',
+#         'USER': 'admin',
+#         'PASSWORD': '25251325',
+#         'NAME': 'mymark2'
+#     },
+#     'OPTIONS': {
+#         'init_command': 'SET default_storage_engine=INNODB',
+#     }
+# }
 
 
 AUTH_USER_MODEL = 'appaccount.User'
