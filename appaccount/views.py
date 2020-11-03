@@ -28,7 +28,7 @@ class UserView(APIView):
         users = User.objects.all()
         serializer = UserSerializer(
             users, many=True, context={'request': request})
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         serializer = UserSerializer(data=request.data)
@@ -49,7 +49,7 @@ class UserDetail(APIView):
     def get(self, request, pk, format=None):
         user = self.get_object(pk)
         serializer = UserSerializer(user, context={'request': request})
-        return Response(serializer.data)
+        return Response(data=serializer.data)
 
     def put(self, request, pk, format=None):
         # print('user la:')

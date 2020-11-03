@@ -1,7 +1,7 @@
 from rest_framework.serializers import (HyperlinkedRelatedField, HyperlinkedModelSerializer,
                                         StringRelatedField, ModelSerializer, PrimaryKeyRelatedField)
 from appmarks.models import (Department, Teacher, SchoolYear, Classes, Student,
-                             Conduct, Subject, Lecture, Marks, MarksRegulary)
+                             Subject, Lecture, Marks, MarksRegulary, ActivitiesClass, AcademicRecord)
 from appaccount.serializiers import UserSerializer
 
 
@@ -27,18 +27,26 @@ class SchoolYearSerializer(HyperlinkedModelSerializer):
     # classes = serializer_related_field
     class Meta:
         model = SchoolYear
-        fields = ['id', 'from_year', 'to_year', ]
+        fields = ['id', 'from_year', 'to_year', 'status']
         read_only_fields = ['id']
 
 
 class ClassesSerializer(HyperlinkedModelSerializer):
-    school_year = SchoolYearSerializer()
-    form_teacher = TeacherSerializer()
+    # school_year = SchoolYearSerializer()
+    # form_teacher = TeacherSerializer()
 
     class Meta:
         model = Classes
-        fields = ['id', 'school_year', 'form_teacher', 'class_name']
+        fields = ['id', 'school_year', 'class_name', 'course_year']
         read_only_fields = ['id']
+
+
+class ActivitiesClassSerializer(HyperlinkedModelSerializer):
+    # user = UserSerializer(many=False)
+
+    class Meta:
+        model = ActivitiesClass
+        fields = ['id', 'classes', 'form_teacher', 'school_year']
 
 
 class StudentSerializer(HyperlinkedModelSerializer):
@@ -46,69 +54,63 @@ class StudentSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['user', 'is_crew']
+        fields = ['user', 'is_crew', 'classes']
 
 
-class ConductSerializer(HyperlinkedModelSerializer):
-    student = StudentSerializer()
-    classes = ClassesSerializer()
+class AcamedicRecordSerializer(HyperlinkedModelSerializer):
+    # student = StudentSerializer()
+    # classes = ClassesSerializer()
 
     class Meta:
-        model = Conduct
-        fields = ['id', 'student', "conduct_stsemester",
-                  "conduct_ndsemester", "conduct_gpasemester", "classes"]
+        model = AcademicRecord
+        fields = ['id', 'student', "school_year",
+                  "gpa_first_semester", "gpa_second_semester", "gpa_year",
+                  "conduct_stsemester", "conduct_ndsemester", "conduct_gpasemester", "rating"
+                  ]
 
 
 class SubjectSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Subject
-        fields = ['id', 'subject_name', 'level', 'descriptions']
+        fields = ['id', 'student', 'school_year', 'gpa_first_semester',
+                  'gpa_second_semester', 'gpa_year', 'conduct_stsemester',
+                  'conduct_ndsemester', 'conduct_gpasemester', 'rating_year']
 
 
 class LectureSerializer(HyperlinkedModelSerializer):
-    teacher = TeacherSerializer()
-    subject = SubjectSerializer()
-    classes = ClassesSerializer()
+    # teacher = TeacherSerializer()
+    # subject = SubjectSerializer()
+    # classes = ClassesSerializer()
 
     # marks =
 
     class Meta:
         model = Lecture
-        fields = ['id', 'teacher', 'subject', 'classes']
+        fields = ['id', 'teacher', 'subject',
+                  'classes', 'school_year', 'status']
 
 
-class MarksRegularySerializer(HyperlinkedModelSerializer):
-    marks_ref = PrimaryKeyRelatedField(read_only=True)
+class MarksSerializer(HyperlinkedModelSerializer):
+    # marks_ref = PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        model = MarksRegulary
-        fields = ['id', 'marks_ref', 'test_date',
-                  'point', 'note', 'is_public', 'is_locked','code_semester']
+        model = Marks
+        fields = ['id', 'student', 'lecture',
+                  'semester', 'mid_semester_point', 'gpa_semester_point',
+                  'gpa_year_point', 'is_public', 'is_locked', 'due_input']
         # fields = '__all__'
         # exclude=['url']
 
 
-class MarksSerializer(HyperlinkedModelSerializer):
-    lecture = LectureSerializer(read_only=True)
-    student = StudentSerializer(read_only=True)
-    marks_regulary = MarksRegularySerializer(many=True, read_only=True)
+class MarksRegularySerializer(HyperlinkedModelSerializer):
+    # lecture = LectureSerializer(read_only=True)
+    # student = StudentSerializer(read_only=True)
+    # marks_regulary = MarksRegularySerializer(many=True, read_only=True)
 
     class Meta:
         model = Marks
-        fields = ['id',
-                  "mid_first_semester",
-                  "end_first_semester",
-                  "gpa_first_semester",
-                  "mid_second_semester",
-                  "end_second_semester",
-                  "gpa_second_semester",
-                  "gpa_year",
-                  "is_public",
-                  "is_locked",
-                  "student",
-                  "lecture",
-                  "marks_regulary"
-                  ]
+        fields = ['id', "student", "lecture", "semester", "test_date",
+                  "point", "note", "is_public", "is_locked", 'times']
         read_only_fields = ['id']
         # extra_kwargs = {
         #     'lecture': {'required': False},

@@ -89,7 +89,7 @@ DATABASES = {
         'PORT': '3306',
         'USER': 'quizs',
         'PASSWORD': '25251325',
-        'NAME': 'mymark2'
+        'NAME': 'mymark'
     },
     'OPTIONS': {
         'init_command': 'SET default_storage_engine=INNODB',

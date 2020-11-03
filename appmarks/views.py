@@ -5,10 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from appmarks.models import (
     Department, Teacher, SchoolYear, Classes,
-    Student, Conduct, Subject, Lecture, Marks, MarksRegulary)
+    Student, AcademicRecord, Subject, Lecture, Marks, MarksRegulary, ActivitiesClass)
 from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
-    StudentSerializer, ConductSerializer, SubjectSerializer,
+    StudentSerializer, AcamedicRecordSerializer, ActivitiesClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
 from django.http import Http404
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -62,7 +62,7 @@ class DepartmentDetail(APIView):
             department, context={'request': request})
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         department = self.get_object(pk)
 
         serializier = DepartmentSerializer(department, data=request.data)
@@ -84,7 +84,6 @@ class TeacherView(APIView):
 
     def get(self, request, format=None):
         teachers = Teacher.objects.all()
-        print(teachers)
         serializer = TeacherSerializer(
             teachers, many=True, context={'request': request})
         return Response(serializer.data)
@@ -265,58 +264,106 @@ class StudentDetail(APIView):
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-"""Conduct"""
+"""ActivitiesClass"""
 
 
-class ConductView(APIView):
+class ActivitiesClassView(APIView):
 
     def get(self, request, format=None):
-        conducts = Conduct.objects.all()
-        serializer = ConductSerializer(
-            conducts, many=True, context={'request': request})
+        activitiesclass = ActivitiesClass.objects.all()
+        serializer = ActivitiesClassSerializer(
+            activitiesclass, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = ConductSerializer(data=request.data)
+        serializer = ActivitiesClassSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ConductDetail(APIView):
+class ActivitiesClassDetail(APIView):
     def get_object(self, pk):
         try:
-            return Conduct.objects.get(pk=pk)
-        except Conduct.DoesNotExist:
+            return ActivitiesClass.objects.get(pk=pk)
+        except ActivitiesClass.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
-        conduct = self.get_object(pk)
-        serializier = ConductSerializer(conduct)
+        activitiesclass = self.get_object(pk)
+        serializier = ActivitiesClassSerializer(
+            activitiesclass, context={'request': request})
         return Response(serializier.data)
 
     def put(self, request, pk, format=None):
-        conduct = self.get_object(pk)
-        serializier = ConductSerializer(conduct, data=request.data)
+        activitiesclass = self.get_object(pk)
+        serializier = ActivitiesClassSerializer(
+            activitiesclass, data=request.data)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        conduct = self.get_object(pk)
-        conduct.delete()
+        activitiesclass = self.get_object(pk)
+        activitiesclass.delete()
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
-    serializer_class = ConductSerializer
+"""Conduct"""
 
-    def get_queryset(self):
-        class_id = self.kwargs['class_id']
-        # schoolyear = self.kwargs['schoolyear']
-        return Conduct.objects.filter(classes__id=class_id)
+
+class AcademicRecordView(APIView):
+
+    def get(self, request, format=None):
+        acamedicrecord = AcademicRecord.objects.all()
+        serializer = AcamedicRecordSerializer(
+            acamedicrecord, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = AcademicRecordSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AcademicRecordDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return AcademicRecord.objects.get(pk=pk)
+        except AcademicRecord.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        acamedicrecord = self.get_object(pk)
+        serializier = AcamedicRecordSerializer(acamedicrecord)
+        return Response(serializier.data)
+
+    def put(self, request, pk, format=None):
+        academicrecord = self.get_object(pk)
+        serializier = AcademicRecordSerializer(
+            academicrecord, data=request.data)
+        if serializier.is_valid():
+            serializier.save()
+            return Response(serializier.data)
+        return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        academicrecord = self.get_object(pk)
+        academicrecord.delete()
+        return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+# class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
+#     serializer_class = ConductSerializer
+
+#     def get_queryset(self):
+#         class_id = self.kwargs['class_id']
+#         # schoolyear = self.kwargs['schoolyear']
+#         return Conduct.objects.filter(classes__id=class_id)
 
 
 class StudentsOfClass2(generics.ListAPIView):
@@ -325,7 +372,7 @@ class StudentsOfClass2(generics.ListAPIView):
     def get_queryset(self):
         # class_id = self.kwargs['class_id']
         # schoolyear = self.kwargs['schoolyear']
-        return Student.objects.filter(conduct__classes__lecture__id=2)
+        return Student.objects.filter(classes=1)
 
 
 """Subject"""
@@ -425,7 +472,7 @@ class LectureList(generics.ListAPIView):
         # teacher = self.request.user
         teacher = self.kwargs['teacher']
         schoolyear = self.kwargs['schoolyear']
-        return Lecture.objects.filter(teacher__user__id=teacher, classes__school_year__id=schoolyear)
+        return Lecture.objects.filter(teacher__user__id=teacher, classes__id=1, school_year__id=schoolyear)
 
 
 """Marks"""
