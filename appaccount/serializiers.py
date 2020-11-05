@@ -10,7 +10,17 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name',
-                  'gender', 'birthday', 'email', 'phone_number', 'address', 'is_teacher', ]
+                  'gender', 'birthday', 'email', 'phone_number', 'address', 'is_teacher', 'password']
+        extra_kwargs = {'password': {'write_only': True}} 
+
+    def create(self, validated_data):
+        user = User(
+            username=validated_data['username'],
+            # password=validated_data['[password']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class ChangePasswordSerializer(serializers.Serializer):

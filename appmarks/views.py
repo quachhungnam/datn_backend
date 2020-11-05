@@ -10,10 +10,12 @@ from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
     StudentSerializer, AcamedicRecordSerializer, ActivitiesClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
+from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 from rest_framework.parsers import MultiPartParser, FormParser
 import pandas as pd
 from pandas import ExcelFile
+from rest_framework.renderers import JSONRenderer
 # Create your views here.
 
 
@@ -86,7 +88,15 @@ class TeacherView(APIView):
         teachers = Teacher.objects.all()
         serializer = TeacherSerializer(
             teachers, many=True, context={'request': request})
-        return Response(serializer.data)
+        return Response(data=serializer.data)
+
+    def post(self, request, format=None):
+        return Response({'name': 'name'})
+        # serializer = TeacherSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeacherDetail(APIView):
@@ -205,7 +215,7 @@ class ClassesDetail(APIView):
         serializier = ClassesSerializer(classes)
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         classes = self.get_object(pk)
         serializier = ClassesSerializer(classes, data=request.data)
         if serializier.is_valid():
@@ -216,14 +226,13 @@ class ClassesDetail(APIView):
     def delete(self, request, pk, format=None):
         classes = self.get_object(pk)
         classes.delete()
-        return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 """Student"""
 
 
 class StudentView(APIView):
-
     def get(self, request, format=None):
         students = Student.objects.all()
         serializer = StudentSerializer(
@@ -250,7 +259,7 @@ class StudentDetail(APIView):
         serializier = StudentSerializer(student, context={'request': request})
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         student = self.get_object(pk)
         serializier = StudentSerializer(student, data=request.data)
         if serializier.is_valid():
@@ -296,7 +305,7 @@ class ActivitiesClassDetail(APIView):
             activitiesclass, context={'request': request})
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         activitiesclass = self.get_object(pk)
         serializier = ActivitiesClassSerializer(
             activitiesclass, data=request.data)
@@ -342,7 +351,7 @@ class AcademicRecordDetail(APIView):
         serializier = AcamedicRecordSerializer(acamedicrecord)
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         academicrecord = self.get_object(pk)
         serializier = AcademicRecordSerializer(
             academicrecord, data=request.data)
@@ -406,7 +415,7 @@ class SubjectDetail(APIView):
         serializier = SubjectSerializer(subject)
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         subject = self.get_object(pk)
         serializier = SubjectSerializer(subject, data=request.data)
         if serializier.is_valid():
@@ -451,7 +460,7 @@ class LectureDetail(APIView):
         serializier = LectureSerializer(lecture, context={'request': request})
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         lecture = self.get_object(pk)
         serializier = LectureSerializer(lecture, data=request.data)
         if serializier.is_valid():
@@ -564,7 +573,7 @@ class MarksRegularyDetail(APIView):
         serializier = MarksRegularySerializer(marksregulary)
         return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         marksregulary = self.get_object(pk)
         serializier = MarksRegularySerializer(marksregulary, data=request.data)
         if serializier.is_valid():
@@ -627,7 +636,7 @@ class TeacherDetail(APIView):
         serializer = TeacherSerializer(snippet)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         user = self.get_object(pk)
         serializer = TeacherSerializer(user, data=request.data)
         if serializer.is_valid():

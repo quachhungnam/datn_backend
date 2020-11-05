@@ -1,8 +1,9 @@
 # Create your models here.
 from django.db import models
 from appaccount.models import User
-from datetime import datetime
+from datetime import datetime, date
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 # Create your models here.
 
 
@@ -33,8 +34,8 @@ class Teacher(models.Model):  # Giao vien
 
 class SchoolYear(models.Model):  # Nam hoc
     id = models.BigAutoField(primary_key=True)
-    from_year = models.DateField(null=True)
-    to_year = models.DateField(null=True)
+    from_year = models.DateField(default=date.today)
+    to_year = models.DateField(default=date.today)
     status = models.BooleanField(default=True)
 
     class Meta:
@@ -47,7 +48,8 @@ class SchoolYear(models.Model):  # Nam hoc
 class Classes(models.Model):  # Lop sinh hoat
     id = models.BigAutoField(primary_key=True)
     class_name = models.CharField(null=False, max_length=10)  # vi du: A2
-    course_year = models.DateField(null=True)  # khoa hoc, vidu:  K2008
+    course_year = models.DateField(
+        default=date.today)  # khoa hoc, vidu:  K2008
 
     class Meta:
         db_table = 'classes'
@@ -67,6 +69,10 @@ class ActivitiesClass(models.Model):  # lop sinh hoat,
 
     class Meta:
         db_table = 'activitiesclass'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['classes', 'form_teacher', 'school_year'], name='unique_activitiesclass')
+        ]
 
     # def __str__(self):
     #     return str(self.class_name)
@@ -77,13 +83,25 @@ class Student(models.Model):  # Thong tin hoc sinh
         User, on_delete=models.CASCADE, primary_key=True)
     is_crew = models.BooleanField(default=False)  # Doan vien
     classes = models.ForeignKey(
-        Classes, on_delete=models.DO_NOTHING)  # id lop hoc
+        Classes, on_delete=models.DO_NOTHING, null=True, blank=True,)  # id lop hoc
 
     class Meta:
         db_table = 'student'
 
     def __str__(self):
         return str(self.user)
+
+
+class UserManager(models.Manager):
+    def create(self, username, password, is_crew):
+        user = User(username=username, password=password)
+        user.save()
+        student = Student(
+            user=user,
+            is_crew=is_crew,
+        )
+        student.save()
+        return student
 
 
 class AcademicRecord(models.Model):  # ket qua hoc tap va ren luyen theo nam hoc
@@ -155,7 +173,8 @@ class Marks(models.Model):
         Student, on_delete=models.DO_NOTHING, related_name='marks_student')
     lecture = models.ForeignKey(
         Lecture, on_delete=models.DO_NOTHING, related_name='marks_lecture')
-    semester = models.IntegerField(null=True, default=1)  # ma hoc ky, 1 hoac 2
+    semester = models.IntegerField(
+        null=True, default=1)  # ma hoc ky, 1 hoac 2
     # time = models.IntegerField(null=True, blank=True)
     mid_semester_point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True)  # diem giua ky mon hoc
@@ -171,7 +190,7 @@ class Marks(models.Model):
     # false admin khong cho chinh sua diem
     is_locked = models.BooleanField(
         choices=[(0, 'UN_LOCKED'), (1, 'LOCKED')], default=False)
-    due_input = models.DateField()  # han nhap diem
+    due_input = models.DateField(default=date.today)  # han nhap diem
 
     class Meta:
         db_table = 'marks'
@@ -190,10 +209,12 @@ class MarksRegulary(models.Model):
         Student, on_delete=models.DO_NOTHING, related_name='marksregulary_student')
     lecture = models.ForeignKey(
         Lecture, on_delete=models.DO_NOTHING, related_name='marksregulary_lecture')
-    semester = models.IntegerField(null=True, default=1)  # ma hoc ky, 1 hoac 2
-    test_date = models.DateTimeField()
+    semester = models.IntegerField(
+        null=True, default=1)  # ma hoc ky, 1 hoac 2
+    test_date = models.DateTimeField(default=timezone.now)
     times = models.IntegerField(null=True, default=1)
-    point = models.DecimalField(max_digits=3, decimal_places=1, default=0.0)
+    point = models.DecimalField(
+        max_digits=3, decimal_places=1, default=0.0)
     note = models.CharField(max_length=200, default='', null=True)
     is_public = models.BooleanField(
         choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)  # show diem

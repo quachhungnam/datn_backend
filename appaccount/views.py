@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
-
+from rest_framework.renderers import JSONRenderer
 from rest_framework import generics
 
 
@@ -23,7 +23,6 @@ class CheckExpireToken(APIView):
 
 class UserView(APIView):
     # permission_classes = (IsAuthenticated, )
-
     def get(self, request, format=None):
         users = User.objects.all()
         serializer = UserSerializer(
@@ -52,13 +51,8 @@ class UserDetail(APIView):
         return Response(data=serializer.data)
 
     def put(self, request, pk, format=None):
-        # print('user la:')
-        # print(request)
-        # print(request.user)
         print(request.user)
         user = self.get_object(pk)
-        # print(user)
-        # user = request.user
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -68,6 +62,8 @@ class UserDetail(APIView):
     def delete(self, request, pk, format=None):
         user = self.get_object(pk)
         user.delete()
+        if user is None:
+            return Response({'fail': 'fail'})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
