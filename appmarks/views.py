@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from appaccount.models import User
 from appmarks.models import (
     Department, Teacher, SchoolYear, Classes,
     Student, AcademicRecord, Subject, Lecture, Marks, MarksRegulary, ActivitiesClass)
@@ -17,18 +18,6 @@ import pandas as pd
 from pandas import ExcelFile
 from rest_framework.renderers import JSONRenderer
 # Create your views here.
-
-
-# class HelloView(APIView):
-#     # permission_classes = (IsAuthenticated,)
-
-#     def get(self, request):
-#         content = {'message': 'Hello, World!'}
-#         return Response(content)
-
-# Lay thong tin ca nhan
-# Lay tat ca diem cua hoc sinh theo nam
-
 
 """
 Department
@@ -83,23 +72,27 @@ class DepartmentDetail(APIView):
 
 
 class TeacherView(APIView):
-
     def get(self, request, format=None):
         teachers = Teacher.objects.all()
         serializer = TeacherSerializer(
             teachers, many=True, context={'request': request})
-        return Response(data=serializer.data)
+        return Response(serializer.data)
 
     def post(self, request, format=None):
-        return Response({'name': 'name'})
-        # serializer = TeacherSerializer(data=request.data)
-        # if serializer.is_valid():
-        #     serializer.save()
-        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = TeacherSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeacherDetail(APIView):
+    def get_user(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise Http404
+
     def get_object(self, pk):
         try:
             return Teacher.objects.get(pk=pk)
@@ -107,21 +100,31 @@ class TeacherDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        serializer = TeacherSerializer(snippet)
-        return Response(serializer.data)
+        teacher = self.get_object(pk)
+        serializier = TeacherSerializer(student, context={'request': request})
+        return Response(serializier.data)
 
-    def put(self, request, pk, format=None):
-        user = self.get_object(pk)
-        serializer = TeacherSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def patch(self, request, pk, format=None):
+        teacher = self.get_user(pk)
+        user_data = request.data.get('user', None)
+        if user_data is not None:
+            serializier_user = UserSerializer(
+                user, data=user_data, partial=True)
+            if serializier_user.is_valid():
+                serializier_user.save()
+            del request.data['user']
+
+        teacher = self.get_object(pk)
+        serializier = TeacherSerializer(
+            teacher, data=request.data, partial=True)
+        if serializier.is_valid():
+            serializier.save()
+            return Response(serializier.data)
+        return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        user = self.get_object(pk)
-        user.delete()
+        teacher = self.get_object(pk)
+        teacher.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -248,6 +251,12 @@ class StudentView(APIView):
 
 
 class StudentDetail(APIView):
+    def get_user(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise Http404
+
     def get_object(self, pk):
         try:
             return Student.objects.get(pk=pk)
@@ -260,8 +269,19 @@ class StudentDetail(APIView):
         return Response(serializier.data)
 
     def patch(self, request, pk, format=None):
+        user = self.get_user(pk)
+        user_data = request.data.get('user', None)
+        print(user_data)
+        if user_data is not None:
+            serializier_user = UserSerializer(
+                user, data=user_data, partial=True)
+            if serializier_user.is_valid():
+                serializier_user.save()
+            del request.data['user']
+
         student = self.get_object(pk)
-        serializier = StudentSerializer(student, data=request.data)
+        serializier = StudentSerializer(
+            student, data=request.data, partial=True)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
@@ -270,7 +290,7 @@ class StudentDetail(APIView):
     def delete(self, request, pk, format=None):
         student = self.get_object(pk)
         student.delete()
-        return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 """ActivitiesClass"""
@@ -617,7 +637,7 @@ class AddStudent(APIView):
 class TeacherView(APIView):
 
     def get(self, request, format=None):
-        teachers = Teacher.objects.all().prefetch_related('department')
+        teachers = Teacher.objects.all()
         print(teachers)
         serializer = TeacherSerializer(
             teachers, many=True, context={'request': request})

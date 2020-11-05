@@ -92,18 +92,6 @@ class Student(models.Model):  # Thong tin hoc sinh
         return str(self.user)
 
 
-class UserManager(models.Manager):
-    def create(self, username, password, is_crew):
-        user = User(username=username, password=password)
-        user.save()
-        student = Student(
-            user=user,
-            is_crew=is_crew,
-        )
-        student.save()
-        return student
-
-
 class AcademicRecord(models.Model):  # ket qua hoc tap va ren luyen theo nam hoc
     id = models.BigAutoField(primary_key=True)
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
@@ -226,3 +214,17 @@ class MarksRegulary(models.Model):
 
     def __str__(self):
         return str(self.point)
+
+
+# class StudentManager(models.Manager):
+
+#     def create(self, username, email, is_premium_member=False, has_support_contract=False):
+#         user = User(username=username, email=email)
+#         user.save()
+#         profile = Profile(
+#             user=user,
+#             is_premium_member=is_premium_member,
+#             has_support_contract=has_support_contract
+#         )
+#         profile.save()
+#         return user

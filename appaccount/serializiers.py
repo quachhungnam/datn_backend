@@ -11,7 +11,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['id', 'username', 'first_name', 'last_name',
                   'gender', 'birthday', 'email', 'phone_number', 'address', 'is_teacher', 'password']
-        extra_kwargs = {'password': {'write_only': True}} 
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(
@@ -21,6 +21,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -6,18 +6,6 @@ from appaccount.models import User
 from django.db import models
 
 
-class UserManager(models.Manager):
-    def create(self, username, password, is_crew):
-        user = User(username=username, password=password)
-        user.save()
-        student = Student(
-            user=user,
-            is_crew=is_crew,
-        )
-        student.save()
-        return student
-
-
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
@@ -26,7 +14,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class TeacherSerializer(serializers.ModelSerializer):
-    # user = UserSerializer()
+    user = UserSerializer()
+
     class Meta:
         model = Teacher
         fields = ['user', 'department']
@@ -68,34 +57,37 @@ class StudentSerializer(serializers.ModelSerializer):
 
         student = Student(
             user=user,
-            classes=validated_data['classes']
+            classes=validated_data.pop('classes', None),
+            is_crew=validated_data.pop('is_crew', False)
         )
         student.save()
         return student
 
-    def update(self, instance, validated_data):
-        profile_data = validated_data.pop('profile')
-        # Unless the application properly enforces that this field is
-        # always set, the following could raise a `DoesNotExist`, which
-        # would need to be handled.
-        profile = instance.profile
-        
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        instance.save()
+    # def update(self, instance, validated_data):
 
-        profile.is_premium_member = profile_data.get(
-            'is_premium_member',
-            profile.is_premium_member
-        )
-        profile.has_support_contract = profile_data.get(
-            'has_support_contract',
-            profile.has_support_contract
-        )
+    #     instance.user = validated_data.get('user', instance.user)
 
-        student.save()
+    #     instance.user.save()  # luu user
 
-        return student
+    #     instance.is_crew = validated_data.get(
+    #         'is_crew', instance.is_crew)  # get crew moi
+    #     instance.classes = validated_data.get(
+    #         'classes', instance.classes)  # get classes moi
+
+    #     # instance.username = validated_data.get('username', instance.username)
+    #     # instance.email = validated_data.get('email', instance.email)
+
+    #     # profile.is_premium_member = profile_data.get(
+    #     #     'is_premium_member',
+    #     #     profile.is_premium_member
+    #     # )
+    #     # profile.has_support_contract = profile_data.get(
+    #     #     'has_support_contract',
+    #     #     profile.has_support_contract
+    #     # )
+
+    #     instance.save()
+    #     return instance
 
 
 class AcamedicRecordSerializer(serializers.ModelSerializer):

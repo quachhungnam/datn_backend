@@ -50,10 +50,9 @@ class UserDetail(APIView):
         serializer = UserSerializer(user, context={'request': request})
         return Response(data=serializer.data)
 
-    def put(self, request, pk, format=None):
-        print(request.user)
+    def patch(self, request, pk, format=None):
         user = self.get_object(pk)
-        serializer = UserSerializer(user, data=request.data)
+        serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -62,8 +61,6 @@ class UserDetail(APIView):
     def delete(self, request, pk, format=None):
         user = self.get_object(pk)
         user.delete()
-        if user is None:
-            return Response({'fail': 'fail'})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
