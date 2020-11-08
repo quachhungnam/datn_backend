@@ -7,6 +7,38 @@ from django.utils import timezone
 # Create your models here.
 
 
+class TeacherManager(models.Manager):
+    # thuoc tinh cac de ket noi den DB
+    def create(self, username, password, first_name, last_name, gender,
+               birthday, email, phone_number, address, department):
+        user = User(username=username, first_name=first_name, last_name=last_name, gender=gender,
+                    birthday=birthday, email=email, phone_number=phone_number, address=address, is_teacher=True)
+        user.set_password(password)
+        user.save()
+        teacher = Teacher(
+            user=user,
+            department=department,
+        )
+        teacher.save()
+        return teacher
+
+
+class StudentManager(models.Manager):
+    def create(self, username, password, first_name, last_name, gender,
+               birthday, email, phone_number, address, is_crew, classes):
+        user = User(username=username, first_name=first_name, last_name=last_name, gender=gender,
+                    birthday=birthday, email=email, phone_number=phone_number, address=address)
+        user.set_password(password)
+        user.save()
+        student = Student(
+            user=user,
+            is_crew=is_crew,
+            classes=classes,
+        )
+        student.save()
+        return student
+
+
 class Department(models.Model):  # bo mon, bo phan, to^~ nao
     id = models.AutoField(primary_key=True)
     department_name = models.CharField(max_length=100)
@@ -23,7 +55,9 @@ class Teacher(models.Model):  # Giao vien
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True)
     department = models.ForeignKey(
-        Department, on_delete=models.DO_NOTHING, related_name='teacher')
+        Department, on_delete=models.DO_NOTHING,
+        related_name='teacher', null=True, blank=True)
+    objects = TeacherManager()
 
     class Meta:
         db_table = 'teacher'
@@ -81,9 +115,10 @@ class ActivitiesClass(models.Model):  # lop sinh hoat,
 class Student(models.Model):  # Thong tin hoc sinh
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True)
-    is_crew = models.BooleanField(default=False)  # Doan vien
+    is_crew = models.BooleanField(default=False,null=False,blank=False,choices=[(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')],)  # Doan vien
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, null=True, blank=True,)  # id lop hoc
+    objects = StudentManager()
 
     class Meta:
         db_table = 'student'
@@ -214,17 +249,3 @@ class MarksRegulary(models.Model):
 
     def __str__(self):
         return str(self.point)
-
-
-# class StudentManager(models.Manager):
-
-#     def create(self, username, email, is_premium_member=False, has_support_contract=False):
-#         user = User(username=username, email=email)
-#         user.save()
-#         profile = Profile(
-#             user=user,
-#             is_premium_member=is_premium_member,
-#             has_support_contract=has_support_contract
-#         )
-#         profile.save()
-#         return user

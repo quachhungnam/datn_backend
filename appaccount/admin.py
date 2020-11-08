@@ -1,22 +1,22 @@
 # from django.contrib import admin
 
 # Register your models here.
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from appaccount.models import User as CustomUser
-from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
-                             AcademicRecord, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
-from django.contrib.auth.forms import UserChangeForm
 from appaccount.forms import CustomUserCreationForm
 from django.shortcuts import render
 from django.utils.translation import ngettext
-from django.contrib import messages
 from django.core import serializers
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponseRedirect
-# from appmarks.models import Student, Teacher, Lecture, Classes, Marks
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django import forms
+from appaccount.models import User as CustomUser
+from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
+                             AcademicRecord, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
 # Register your models here.
+
+# USER
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -50,6 +50,96 @@ class CustomUserAdmin(BaseUserAdmin):
             student,
         ) % student, messages.SUCCESS)
     set_user_student.short_description = "Set user is Student"
+
+
+# STUDENT
+
+class StudentInline(admin.StackedInline):
+    model = Student
+    can_delete = False
+    verbose_name_plural = 'Student'
+
+
+class StudentUser(CustomUser):
+    class Meta:
+        proxy = True
+        verbose_name = 'Student'
+
+
+class StudentAdmin(BaseUserAdmin):
+    model = Student
+    inlines = (StudentInline,)
+    fieldsets = fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        (('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    ) + (
+        ('More infor', {'fields': (
+            'gender', 'birthday', 'phone_number', 'address')}),
+    )
+    list_display = ['username', 'first_name',
+                    'last_name', 'email', 'is_staff', 'is_teacher']
+
+    def get_queryset(self, request):
+        return CustomUser.objects.filter(is_teacher=False, is_superuser=False)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        obj = form.instance
+        if change == False:
+            student = Student(user=obj)
+            student.save()
+        form.save_m2m()
+        for formset in formsets:
+            self.save_formset(request, form, formset, change=change)
+
+
+# TEACHER
+
+class TeacherInline(admin.StackedInline):
+    model = Teacher
+    can_delete = False
+    verbose_name_plural = 'Teacher'
+
+
+class TeacherUser(CustomUser):
+    class Meta:
+        proxy = True
+        verbose_name = 'Teacher'
+
+
+class TeacherAdmin(BaseUserAdmin):
+    # model = Teacher
+    inlines = (TeacherInline,)
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('More infor', {'fields': ('gender',
+                                   'birthday', 'phone_number', 'address')}),
+    )
+    list_display = ['username', 'first_name',
+                    'last_name', 'email', 'is_staff', 'is_teacher']
+
+    def get_queryset(self, request):
+        return CustomUser.objects.filter(is_teacher=True, is_superuser=False)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.is_teacher = True
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        obj = form.instance
+        if change == False:
+            teacher = Teacher(user=obj)
+            teacher.save()
+        form.save_m2m()
+        for formset in formsets:
+            self.save_formset(request, form, formset, change=change)
 
 
 # class StudentAdmin(admin.ModelAdmin):
@@ -194,45 +284,38 @@ class CustomUserAdmin(BaseUserAdmin):
 #     def get_schoolyear(self, Conduct):
 #         return Conduct.classes.school_year
 #     get_schoolyear.short_description = 'schoolyear'
-
-
 # class SubjectAdmin(admin.ModelAdmin):
 #     list_display = ['subject_name', 'level', 'descriptions']
 #     list_filter = ('subject_name', 'level')
 #     ordering = ['level']
-
-
 # class MarksAdmin(admin.ModelAdmin):
 #     list_display = ['student', 'get_fullname', 'get_classes',
 #                     'get_subjectname', 'gpa_year']
 #     list_filter = ('student', 'lecture')
 #     # ho ten
-
 #     def get_fullname(self, Marks):
 #         return Marks.student.user.first_name + ' ' + Marks.student.user.last_name
 #     get_fullname.short_description = 'fullname'
-
 #     def get_classes(self, Marks):
 #         return Marks.lecture.classes
 #     get_classes.short_description = 'Class'
-
 #     def get_subjectname(self, Marks):
 #         return Marks.lecture.subject
 #     get_subjectname.short_description = 'subject'
-
-
 # class DepartmentAdmin(admin.ModelAdmin):
 #     list_display = ['department_name']
-
-
 # class MarksRegularyAdmin(admin.ModelAdmin):
 #     list_display = ['marks_ref','test_date',
 #                     'point', 'note', 'is_public', 'is_locked']
-
 #     # ordering = ['level']
 admin.site.register(CustomUser, CustomUserAdmin)
-# admin.site.register(Teacher, TeacherAdmin)
+admin.site.register(StudentUser, StudentAdmin)
+admin.site.register(TeacherUser, TeacherAdmin)
+
 # admin.site.register(Student, StudentAdmin)
+
+# admin.site.register(Teacher, MyTeacherAdmin)
+# admin.site.register(Student,)
 # admin.site.register(Classes, ClassesAdmin)
 # admin.site.register(Lecture, LectureAdmin)
 # admin.site.register(Department, DepartmentAdmin)

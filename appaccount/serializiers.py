@@ -16,11 +16,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
         user = User(
             username=validated_data['username'],
-            # password=validated_data['[password']
+            # password=validated_data['[password']d
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
+    
 
 
 

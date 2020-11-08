@@ -1,16 +1,16 @@
 from django.shortcuts import render
 # Create your views here.
-from appaccount.models import User
 from rest_framework import viewsets, generics
 from rest_framework import permissions
-from appaccount.serializiers import UserSerializer, ChangePasswordSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import Http404
 from rest_framework.renderers import JSONRenderer
 from rest_framework import generics
+from appaccount.models import User
+from appaccount.serializiers import UserSerializer, ChangePasswordSerializer
+from django.http import Http404
 
 
 class CheckExpireToken(APIView):
@@ -22,7 +22,8 @@ class CheckExpireToken(APIView):
 
 
 class UserView(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, format=None):
         users = User.objects.all()
         serializer = UserSerializer(
@@ -38,6 +39,7 @@ class UserView(APIView):
 
 
 class UserDetail(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self, pk):
         try:
@@ -52,6 +54,8 @@ class UserDetail(APIView):
 
     def patch(self, request, pk, format=None):
         user = self.get_object(pk)
+        if request.data.get('password') is not None:
+            del request.data['password']
         serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -65,9 +69,6 @@ class UserDetail(APIView):
 
 
 class ChangePasswordView(generics.UpdateAPIView):
-    """
-    An endpoint for changing password.
-    """
     serializer_class = ChangePasswordSerializer
     model = User
     permission_classes = (IsAuthenticated,)

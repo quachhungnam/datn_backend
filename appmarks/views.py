@@ -3,6 +3,9 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.parsers import MultiPartParser, FormParser
 from appaccount.models import User
 from appmarks.models import (
     Department, Teacher, SchoolYear, Classes,
@@ -13,10 +16,9 @@ from appmarks.serializiers import (
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
-from rest_framework.parsers import MultiPartParser, FormParser
 import pandas as pd
 from pandas import ExcelFile
-from rest_framework.renderers import JSONRenderer
+
 # Create your views here.
 
 """
@@ -25,6 +27,7 @@ Department
 
 
 class DepartmentView(APIView):
+    permission_classes = (IsAuthenticated, IsAdminUser,)
 
     def get(self, request, format=None):
         departments = Department.objects.all()
@@ -41,6 +44,8 @@ class DepartmentView(APIView):
 
 
 class DepartmentDetail(APIView):
+    permission_classes = (IsAuthenticated, IsAdminUser,)
+
     def get_object(self, pk):
         try:
             return Department.objects.get(pk=pk)
@@ -55,7 +60,6 @@ class DepartmentDetail(APIView):
 
     def patch(self, request, pk, format=None):
         department = self.get_object(pk)
-
         serializier = DepartmentSerializer(department, data=request.data)
         if serializier.is_valid():
             serializier.save()
@@ -65,13 +69,15 @@ class DepartmentDetail(APIView):
     def delete(self, request, pk, format=None):
         department = self.get_object(pk)
         department.delete()
-        return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 """Teacher"""
 
 
 class TeacherView(APIView):
+    permission_classes = (IsAuthenticated, IsAdminUser,)
+
     def get(self, request, format=None):
         teachers = Teacher.objects.all()
         serializer = TeacherSerializer(
@@ -87,6 +93,8 @@ class TeacherView(APIView):
 
 
 class TeacherDetail(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def get_user(self, pk):
         try:
             return User.objects.get(pk=pk)
@@ -101,20 +109,21 @@ class TeacherDetail(APIView):
 
     def get(self, request, pk, format=None):
         teacher = self.get_object(pk)
-        serializier = TeacherSerializer(student, context={'request': request})
+        serializier = TeacherSerializer(teacher, context={'request': request})
         return Response(serializier.data)
 
     def patch(self, request, pk, format=None):
-        teacher = self.get_user(pk)
+        teacher = self.get_object(pk)
         user_data = request.data.get('user', None)
         if user_data is not None:
+            if user_data.get('password') is not None:
+                del user_data['password']
             serializier_user = UserSerializer(
-                user, data=user_data, partial=True)
+                teacher.user, data=user_data, partial=True)
             if serializier_user.is_valid():
                 serializier_user.save()
             del request.data['user']
 
-        teacher = self.get_object(pk)
         serializier = TeacherSerializer(
             teacher, data=request.data, partial=True)
         if serializier.is_valid():
@@ -132,10 +141,6 @@ class PurchaseList(generics.ListAPIView):
     serializer_class = TeacherSerializer
 
     def get_queryset(self):
-        """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
-        """
 
         return Teacher.objects.filter(user_id=2)
 
@@ -269,12 +274,13 @@ class StudentDetail(APIView):
         return Response(serializier.data)
 
     def patch(self, request, pk, format=None):
-        user = self.get_user(pk)
+        student = self.get_object(pk)
         user_data = request.data.get('user', None)
-        print(user_data)
         if user_data is not None:
+            if user_data.get('password') is not None:
+                del user_data['password']
             serializier_user = UserSerializer(
-                user, data=user_data, partial=True)
+                student.user, data=user_data, partial=True)
             if serializier_user.is_valid():
                 serializier_user.save()
             del request.data['user']
@@ -632,66 +638,3 @@ class AddStudent(APIView):
 
         except:
             return Response({"success": 'fail'}, status=status.HTTP_201_CREATED)
-
-
-class TeacherView(APIView):
-
-    def get(self, request, format=None):
-        teachers = Teacher.objects.all()
-        print(teachers)
-        serializer = TeacherSerializer(
-            teachers, many=True, context={'request': request})
-        return Response(serializer.data)
-
-
-class TeacherDetail(APIView):
-    def get_object(self, pk):
-        try:
-            return Teacher.objects.get(pk=pk)
-        except Teacher.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        serializer = TeacherSerializer(snippet)
-        return Response(serializer.data)
-
-    def patch(self, request, pk, format=None):
-        user = self.get_object(pk)
-        serializer = TeacherSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        user = self.get_object(pk)
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # class ClassesView(APIView):
-
-    #     def get(self, request, format=None):
-    #         serializer_context = {
-    #             'request': request,
-    #         }
-    #         departments = Classes.objects.all()
-    #         serializer = ClassesSerializer(departments, context=serializer_context)
-    #         # serializer = ClassesSerializer(
-    #         #     departments, many=True,)
-
-    #         return Response(serializer.data)
-
-    # def post(self, request, format=None):
-    #     serializer = DepartmentSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    #   def getByUsername(self, request, username):
-    #         serializer_context = {
-    #             'request': request,
-    #         }
-    #         user = get_object_or_404(User, username=username)
-    #         return Response(UserSerializer(user, context=serializer_context).data, status=status.HTTP_200_OK)

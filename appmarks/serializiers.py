@@ -20,6 +20,20 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = ['user', 'department']
 
+    def create(self, validated_data):
+        return Teacher.objects.create(
+            username=validated_data['user']['username'],
+            password=validated_data['user']['password'],
+            first_name=validated_data.get('user').get('first_name', ''),
+            last_name=validated_data['user'].get('last_name', ''),
+            gender=validated_data['user'].get('gender'),
+            birthday=validated_data['user'].get('birthday'),
+            email=validated_data['user'].get('email', ''),
+            phone_number=validated_data['user'].get('phone_number', ''),
+            address=validated_data['user'].get('address', ''),
+            department=validated_data.get('department')
+        )
+
 
 class SchoolYearSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,45 +63,19 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ['user', 'is_crew', 'classes']
 
     def create(self, validated_data):
-        user = User(
+        return Student.objects.create(
             username=validated_data['user']['username'],
+            password=validated_data['user']['password'],
+            first_name=validated_data.get('user').get('first_name', ''),
+            last_name=validated_data['user'].get('last_name', ''),
+            gender=validated_data['user'].get('gender'),
+            birthday=validated_data['user'].get('birthday'),
+            email=validated_data['user'].get('email', ''),
+            phone_number=validated_data['user'].get('phone_number', ''),
+            address=validated_data['user'].get('address', ''),
+            classes=validated_data.get('classes'),
+            is_crew=validated_data.get('is_crew', False),
         )
-        user.set_password(validated_data['user']['password'])
-        user.save()
-
-        student = Student(
-            user=user,
-            classes=validated_data.pop('classes', None),
-            is_crew=validated_data.pop('is_crew', False)
-        )
-        student.save()
-        return student
-
-    # def update(self, instance, validated_data):
-
-    #     instance.user = validated_data.get('user', instance.user)
-
-    #     instance.user.save()  # luu user
-
-    #     instance.is_crew = validated_data.get(
-    #         'is_crew', instance.is_crew)  # get crew moi
-    #     instance.classes = validated_data.get(
-    #         'classes', instance.classes)  # get classes moi
-
-    #     # instance.username = validated_data.get('username', instance.username)
-    #     # instance.email = validated_data.get('email', instance.email)
-
-    #     # profile.is_premium_member = profile_data.get(
-    #     #     'is_premium_member',
-    #     #     profile.is_premium_member
-    #     # )
-    #     # profile.has_support_contract = profile_data.get(
-    #     #     'has_support_contract',
-    #     #     profile.has_support_contract
-    #     # )
-
-    #     instance.save()
-    #     return instance
 
 
 class AcamedicRecordSerializer(serializers.ModelSerializer):
