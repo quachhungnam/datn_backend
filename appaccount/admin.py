@@ -23,7 +23,7 @@ from appaccount.models import User as CustomUser
 from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
                              AcademicRecord, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
 from import_export.widgets import ForeignKeyWidget
-
+from appmarks.views import ImportData
 # Register your models here.
 # SET Header and Title
 admin.site.site_header = 'Management School Administration'
@@ -80,19 +80,12 @@ class StudentInline(admin.StackedInline):
 
 
 class StudentUser(CustomUser):
-
     class Meta:
         proxy = True
         verbose_name = 'Student'
 
 
-class CourseYearWidget(ForeignKeyWidget):
-    def clean(self, value, row=None, *args, **kwargs):
-        return self.model.objects.get_or_create(course_year=value)[0] if value else None
-
-
 class StudentResource(resources.ModelResource):
-
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'first_name', 'last_name',)
@@ -123,26 +116,26 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('import-csv/', self.import_csv),
+            path('import-data/', ImportData.as_view(), name='importdata'),
         ]
         return my_urls + urls
 
-    def import_csv(self, request):
-        if request.method == "POST":
-            csv_file = request.FILES["csv_file"]
-            # reader = csv.reader(csv_file)
-            df = pd.read_excel(csv_file, sheet_name=0, index_col=0)
-            print(df)
-            # print(reader)
-            # Create Hero objects from passed in data
-            # ...
-            self.message_user(request, "Your csv file has been imported")
-            return redirect("..")
-        form = CsvImportForm()
-        payload = {"form": form}
-        return render(
-            request, "admin/csv_form.html", payload
-        )
+    # def import_csv(self, request):
+    #     if request.method == "POST":
+    #         csv_file = request.FILES["csv_file"]
+    #         # reader = csv.reader(csv_file)
+    #         df = pd.read_excel(csv_file, sheet_name=0, index_col=0)
+    #         print(df)
+    #         # print(reader)
+    #         # Create Hero objects from passed in data
+    #         # ...
+    #         self.message_user(request, "Your csv file has been imported")
+    #         return redirect("..")
+    #     form = CsvImportForm()
+    #     payload = {"form": form}
+    #     return render(
+    #         request, "admin/csv_form.html", payload
+    #     )
 
     def get_classes(self, CustomUser):
         return CustomUser.student.classes

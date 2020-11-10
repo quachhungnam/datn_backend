@@ -1,7 +1,9 @@
+from django import forms
+from django.shortcuts import redirect
 from rest_framework import generics
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.views import APIView, View
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -638,3 +640,35 @@ class AddStudent(APIView):
 
         except:
             return Response({"success": 'fail'}, status=status.HTTP_201_CREATED)
+
+
+class UploadFileForm(forms.Form):
+    data_student = forms.FileField()
+
+
+class ImportData(APIView):
+    parser_class = (MultiPartParser,)
+
+    def post(self, request, format=None):
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                file_data_student = request.FILES["data_student"]
+                df = pd.read_excel(file_data_student,
+                                   sheet_name=0, index_col=0)
+
+                print(df)
+            except:
+                pass
+        # print(reader)
+        # Create Hero objects from passed in data
+        # ...
+        # self.message_user(request, "Your csv file has been imported")
+        return redirect("..")
+
+    def get(self, request, fortmat=None):
+        form = UploadFileForm()
+        payload = {"form": form}
+        return render(
+            request, "admin/csv_form.html", payload
+        )

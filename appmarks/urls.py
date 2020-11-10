@@ -13,12 +13,13 @@ from appmarks.views import (
     # MarksOfClass,
     StudentsOfClass2,
 
-    AddStudent
+    AddStudent,
+    ImportData
 )
-
+app_name = 'appmarks'
 urlpatterns = [
-
-    path('uploadfile/', AddStudent.as_view(),name="upload"),
+    path('import-data/', ImportData.as_view(), name='uploaddata'),
+    path('uploadfile/', AddStudent.as_view(), name="upload"),
 
     path('departments/', DepartmentView.as_view()),
     path('departments/<int:pk>/', DepartmentDetail.as_view(),

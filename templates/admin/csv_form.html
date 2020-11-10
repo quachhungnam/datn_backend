@@ -1,14 +1,21 @@
-{% extends 'admin/base.html' %}
+{% extends 'admin/base_site.html' %} {% block content %} {% load static %}
 
-{% block content %}
-    <div>
-        <form action="." method="POST" enctype="multipart/form-data">
-            {{ form.as_p }}
-            {% csrf_token %}
-
-                <button type="submit">Upload CSV</button>
-        </form>
+<div>
+  <form action="." method="POST" enctype="multipart/form-data">
+    <div class="submit-row">
+      <h2 style="text-transform: uppercase">Import Data Student From Excel</h2>
     </div>
-    <br />
+    <hr />
+    {% csrf_token %}
+
+    <div class="submit-row">
+      {{ form.data_student }}
+      <br />
+      <input class="btn-default" type="submit" value="Import" />
+    </div>
+  </form>
+  {{ block.super }}
+</div>
+<br />
 
 {% endblock %}
