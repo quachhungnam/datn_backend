@@ -1,6 +1,14 @@
 # from django.contrib import admin
 
 # Register your models here.
+import pandas as pd
+from pandas import ExcelFile
+from django.shortcuts import redirect
+import csv
+from django.urls import include, path
+from import_export.admin import ImportExportActionModelAdmin
+from import_export import resources, fields
+from import_export.admin import ImportExportMixin, ImportMixin
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from appaccount.forms import CustomUserCreationForm
@@ -14,8 +22,13 @@ from django import forms
 from appaccount.models import User as CustomUser
 from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
                              AcademicRecord, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
-# Register your models here.
+from import_export.widgets import ForeignKeyWidget
 
+# Register your models here.
+# SET Header and Title
+admin.site.site_header = 'Management School Administration'
+admin.site.site_title = 'Management School'
+admin.site.index_title = 'Management School'
 # USER
 
 
@@ -26,9 +39,10 @@ class CustomUserAdmin(BaseUserAdmin):
         ('More infor', {'fields': ('is_teacher',
                                    'gender', 'birthday', 'phone_number', 'address')}),
     )
-    actions = ['set_is_teacher', 'set_user_student']
+    # actions = ['set_is_teacher', 'set_user_student']
     list_display = ['username', 'first_name',
                     'last_name', 'email', 'is_staff', 'is_teacher']
+    list_per_page = 50
 
     def set_is_teacher(self, request, queryset):
         updated = queryset.update(is_teacher=True)
@@ -51,39 +65,100 @@ class CustomUserAdmin(BaseUserAdmin):
         ) % student, messages.SUCCESS)
     set_user_student.short_description = "Set user is Student"
 
+    def save_model(self, request, obj, form, change):
+        # obj.added_by = request.user
+        print('save user from import')
+        super().save_model(request, obj, form, change)
+
 
 # STUDENT
 
 class StudentInline(admin.StackedInline):
     model = Student
     can_delete = False
-    verbose_name_plural = 'Student'
+    verbose_name_plural = 'Student Information'
 
 
 class StudentUser(CustomUser):
+
     class Meta:
         proxy = True
         verbose_name = 'Student'
 
 
-class StudentAdmin(BaseUserAdmin):
+class CourseYearWidget(ForeignKeyWidget):
+    def clean(self, value, row=None, *args, **kwargs):
+        return self.model.objects.get_or_create(course_year=value)[0] if value else None
+
+
+class StudentResource(resources.ModelResource):
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'first_name', 'last_name',)
+
+        # export_order = ()
+
+
+class CsvImportForm(forms.Form):
+    csv_file = forms.FileField()
+
+
+class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     model = Student
+    resource_class = StudentResource
+    change_list_template = "admin/changelist_student.html"
     inlines = (StudentInline,)
-    fieldsets = fieldsets = (
+    fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (('Personal info'), {'fields': ('first_name', 'last_name',
+                                        'gender', 'birthday', 'address', 'phone_number', 'email')}),
         (('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'fields': ('is_active', 'is_staff',),
         }),
-        (('Important dates'), {'fields': ('last_login', 'date_joined')}),
-    ) + (
-        ('More infor', {'fields': (
-            'gender', 'birthday', 'phone_number', 'address')}),
     )
     list_display = ['username', 'first_name',
-                    'last_name', 'email', 'is_staff', 'is_teacher']
+                    'last_name', 'email', 'get_classes', 'get_course_year', ]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('import-csv/', self.import_csv),
+        ]
+        return my_urls + urls
+
+    def import_csv(self, request):
+        if request.method == "POST":
+            csv_file = request.FILES["csv_file"]
+            # reader = csv.reader(csv_file)
+            df = pd.read_excel(csv_file, sheet_name=0, index_col=0)
+            print(df)
+            # print(reader)
+            # Create Hero objects from passed in data
+            # ...
+            self.message_user(request, "Your csv file has been imported")
+            return redirect("..")
+        form = CsvImportForm()
+        payload = {"form": form}
+        return render(
+            request, "admin/csv_form.html", payload
+        )
+
+    def get_classes(self, CustomUser):
+        return CustomUser.student.classes
+    get_classes.short_description = 'Class'
+
+    def get_course_year(self, CustomUser):
+        return CustomUser.student.course_year
+    get_course_year.short_description = 'CourseYear'
+    list_filter = ('student__course_year', 'student__is_crew',)
+
+    list_per_page = 50
+#     search_fields = ['class_name', 'school_year__from_year',
+#                      'form_teacher__user__username']
 
     def get_queryset(self, request):
+        # return Student.objects.select_related('user').all()
         return CustomUser.objects.filter(is_teacher=False, is_superuser=False)
 
     def save_model(self, request, obj, form, change):
@@ -99,13 +174,13 @@ class StudentAdmin(BaseUserAdmin):
         for formset in formsets:
             self.save_formset(request, form, formset, change=change)
 
-
 # TEACHER
+
 
 class TeacherInline(admin.StackedInline):
     model = Teacher
     can_delete = False
-    verbose_name_plural = 'Teacher'
+    verbose_name_plural = 'Teacher Information'
 
 
 class TeacherUser(CustomUser):
@@ -115,14 +190,19 @@ class TeacherUser(CustomUser):
 
 
 class TeacherAdmin(BaseUserAdmin):
-    # model = Teacher
+    model = Teacher
     inlines = (TeacherInline,)
-    fieldsets = BaseUserAdmin.fieldsets + (
-        ('More infor', {'fields': ('gender',
-                                   'birthday', 'phone_number', 'address')}),
+
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (('Personal info'), {'fields': ('first_name', 'last_name',
+                                        'gender', 'birthday', 'address', 'phone_number', 'email')}),
+        (('Permissions'), {
+            'fields': ('is_active', 'is_staff',),
+        }),
     )
     list_display = ['username', 'first_name',
-                    'last_name', 'email', 'is_staff', 'is_teacher']
+                    'last_name', 'email', 'is_staff']
 
     def get_queryset(self, request):
         return CustomUser.objects.filter(is_teacher=True, is_superuser=False)
@@ -142,224 +222,63 @@ class TeacherAdmin(BaseUserAdmin):
             self.save_formset(request, form, formset, change=change)
 
 
-# class StudentAdmin(admin.ModelAdmin):
-#     list_display = ['user', 'get_fullname',
-#                     'get_gender', 'get_birthday', 'is_crew', ]
-#     search_fields = ['user__username']
-#     actions = ['add_student_class']
-
-#     def get_fullname(self, Student):
-#         return Student.user.first_name + ' ' + Student.user.last_name
-#     get_fullname.short_description = 'fullname'
-
-#     def get_gender(self, Student):
-#         if(Student.user.gender):
-#             return 'Nam'
-
-#         if Student.user.gender == 0:
-#             return 'Nữ'
-#         return '--'
-#     get_gender.short_description = 'gender'
-
-#     def get_birthday(self, Student):
-#         return Student.user.birthday
-#     get_birthday.short_description = 'birthday'
-
-#     def add_student_class(self, request, queryset):
-#         # return render(request,
-#         #               'admin/order_intermediate.html',)
-#         all_class = Classes.objects.all()
-#         print(all_class)
-#         print(request.POST)
-#         if 'apply' in request.POST:
-#             class_id = request.POST.get('setclass')
-#             # print(class_id)
-#             print('ddd')
-#             for student in queryset:
-#                 conduct = Student.objects.create(
-#                     student=student, classes=class_id)
-#             self.message_user(request,
-#                               "Add student {} to class".format(queryset.count()))
-#             return HttpResponseRedirect(request.get_full_path())
-
-#         return render(request,
-#                       'admin/selectclass.html',
-#                       context={'students': queryset, 'all_class': all_class})
-
-#     add_student_class.short_description = "Add student to Class"
-
-#     #               context={})
-#     # for user in (queryset):
-#     #     student = Student.objects.create(user=user)
-#     # self.message_user(request, ngettext(
-#     #     '%d user is seted to Student.',
-#     #     '%d users is seted to Student.',
-#     #     student,
-#     # ) % student, messages.SUCCESS)
+class DepartmentAdmin(admin.ModelAdmin):
+    pass
 
 
-# class TeacherAdmin(admin.ModelAdmin):
-
-#     list_display = ['user', 'get_fullname',
-#                     'get_gender', 'get_birthday', 'department', 'get_phone', 'get_address']
-#     ordering = ['user']
-
-#     def get_fullname(self, Teacher):
-#         return Teacher.user.first_name + ' ' + Teacher.user.last_name
-#     get_fullname.short_description = 'fullname'
-
-#     def get_gender(self, Teacher):
-#         if(Teacher.user.gender):
-#             return 'Nam'
-
-#         if Teacher.user.gender == 0:
-#             return 'Nữ'
-#         return '--'
-#     get_gender.short_description = 'gender'
-
-#     def get_birthday(self, Teacher):
-#         return Teacher.user.birthday
-#     get_birthday.short_description = 'birthday'
-
-#     def get_phone(self, Teacher):
-#         return Teacher.user.phone_number
-#     get_phone.short_description = 'mobile'
-
-#     def get_address(self, Teacher):
-#         return Teacher.user.address
-#     get_address.short_description = 'address'
+class ClassesAdmin(admin.ModelAdmin):
+    pass
 
 
-# class ClassesAdmin(admin.ModelAdmin):
-#     list_display = ['class_name', 'school_year',
-#                     'form_teacher', 'get_fullname']
-#     list_filter = ('class_name', 'school_year', 'form_teacher')
-#     search_fields = ['class_name', 'school_year__from_year',
-#                      'form_teacher__user__username']
-#     ordering = ['class_name']
-
-#     def get_fullname(self, Classes):
-#         return Classes.form_teacher.user.first_name + ' ' + Classes.form_teacher.user.last_name
-#     get_fullname.short_description = 'fullname'
+class ActivitiesClassAdmin(admin.ModelAdmin):
+    pass
 
 
-# class LectureAdmin(admin.ModelAdmin):
-#     list_display = ['classes', 'subject',
-#                     'teacher', 'fullname', 'get_schoolyear']
-#     ordering = ['classes']
-#     list_filter = ['classes', 'subject', 'teacher']
-
-#     def fullname(self, Lecture):
-#         return Lecture.teacher.user.first_name + ' ' + Lecture.teacher.user.last_name
-#     fullname.short_description = 'fullname'
-
-#     def get_schoolyear(self, Lecture):
-#         return str(Lecture.classes.school_year.from_year.year) + ' - ' + str(Lecture.classes.school_year.to_year.year)
-#     get_schoolyear.short_description = 'School Year'
-
-#     def save_model(self, request, obj, form, change):
-#         if request.user.is_superuser:
-#             pass
-#         else:
-#             # do your own custom code
-#             pass
-#         obj.save()
-#         students = Student.objects.all().filter(conduct__classes=obj.classes)
-#         for student in students:
-#             mark = Marks(student=student, lecture=obj)
-#             mark.save()
+class SchoolYearAdmin(admin.ModelAdmin):
+    pass
 
 
-# class ConductAdmin(admin.ModelAdmin):
-#     list_display = ['student', 'get_fullname', 'classes', 'get_schoolyear']
-#     list_filter = ('classes', 'conduct_gpasemester',)
-#     search_fields = ['student__user__username',
-#                      'student__user__first_name', 'student__user__last_name', ]
-#     ordering = ['classes']
+class SubjectAdmin(admin.ModelAdmin):
+    pass
 
-#     def get_fullname(self, Conduct):
-#         return Conduct.student.user.first_name + ' ' + Conduct.student.user.last_name
-#     get_fullname.short_description = 'fullname'
 
-#     def get_schoolyear(self, Conduct):
-#         return Conduct.classes.school_year
-#     get_schoolyear.short_description = 'schoolyear'
-# class SubjectAdmin(admin.ModelAdmin):
-#     list_display = ['subject_name', 'level', 'descriptions']
-#     list_filter = ('subject_name', 'level')
-#     ordering = ['level']
-# class MarksAdmin(admin.ModelAdmin):
-#     list_display = ['student', 'get_fullname', 'get_classes',
-#                     'get_subjectname', 'gpa_year']
-#     list_filter = ('student', 'lecture')
-#     # ho ten
-#     def get_fullname(self, Marks):
-#         return Marks.student.user.first_name + ' ' + Marks.student.user.last_name
-#     get_fullname.short_description = 'fullname'
-#     def get_classes(self, Marks):
-#         return Marks.lecture.classes
-#     get_classes.short_description = 'Class'
-#     def get_subjectname(self, Marks):
-#         return Marks.lecture.subject
-#     get_subjectname.short_description = 'subject'
-# class DepartmentAdmin(admin.ModelAdmin):
-#     list_display = ['department_name']
-# class MarksRegularyAdmin(admin.ModelAdmin):
-#     list_display = ['marks_ref','test_date',
-#                     'point', 'note', 'is_public', 'is_locked']
-#     # ordering = ['level']
+class LectureAdmin(admin.ModelAdmin):
+    pass
+
+
+class AcademicRecordAdmin(admin.ModelAdmin):
+    pass
+
+
+class MarksAdmin(admin.ModelAdmin):
+    pass
+
+
+class MarksRegularyAdmin(admin.ModelAdmin):
+    pass
+
+
+class StudentUser2(Student):
+    class Meta:
+        proxy = True
+        verbose_name = 'Student'
+
+
+class UserInline(admin.StackedInline):
+    model = CustomUser
+    can_delete = False
+    verbose_name_plural = 'Student Information'
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(StudentUser, StudentAdmin)
 admin.site.register(TeacherUser, TeacherAdmin)
-
-# admin.site.register(Student, StudentAdmin)
-
-# admin.site.register(Teacher, MyTeacherAdmin)
-# admin.site.register(Student,)
-# admin.site.register(Classes, ClassesAdmin)
-# admin.site.register(Lecture, LectureAdmin)
-# admin.site.register(Department, DepartmentAdmin)
-# admin.site.register(Conduct, ConductAdmin)
-# admin.site.register(Subject, SubjectAdmin)
-# admin.site.register(SchoolYear)
-# admin.site.register(Marks, MarksAdmin)
-# admin.site.register(MarksRegulary, MarksRegularyAdmin)
-
-
-# class AuthorAdmin(admin.ModelAdmin):
-#     pass
-
-
-# # class CustomUserAdmin(BaseUserAdmin):
-# #     model = CustomUser
-# #     add_form = CustomUserCreationForm
-# #     form = CustomUserChangeForm
-# #     # list_display = ['email', 'username', 'is_teacher','birthday']
-
-
-# class TeacherInline(admin.StackedInline):
-#     model = Teacher
-#     can_delete = False
-#     verbose_name_plural = 'Teacher'
-
-
-# class StudentInline(admin.StackedInline):
-#     model = Student
-#     can_delete = False
-#     verbose_name_plural = 'Student'
-
-# # Define a new User admin
-
-
-# class TeacherAdmin(BaseUserAdmin):
-#     inlines = (TeacherInline,)
-
-
-# class StudentAdmin(BaseUserAdmin):
-#     inlines = (StudentInline,)
-
-
-# # admin.site.unregister(User)
-# admin.site.register(CustomUser, CustomUserAdmin)
-# # admin.site.register(Teacher)
-# # admin.site.register(Student)
+admin.site.register(Classes, ClassesAdmin)
+admin.site.register(Lecture, LectureAdmin)
+admin.site.register(Department, DepartmentAdmin)
+admin.site.register(ActivitiesClass, ActivitiesClassAdmin)
+admin.site.register(AcademicRecord, AcademicRecordAdmin)
+admin.site.register(Subject, SubjectAdmin)
+admin.site.register(SchoolYear, SchoolYearAdmin)
+admin.site.register(Marks, MarksAdmin)
+admin.site.register(MarksRegulary, MarksRegularyAdmin)

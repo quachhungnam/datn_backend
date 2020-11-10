@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'appaccount',
     'appmarks',
+    'import_export',
 ]
 
 MIDDLEWARE = [

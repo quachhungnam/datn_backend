@@ -89,7 +89,7 @@ class Classes(models.Model):  # Lop sinh hoat
         db_table = 'classes'
 
     def __str__(self):
-        return str(self.class_name)
+        return str(self.class_name)+' K_'+str(self.course_year.year)
 
 
 class ActivitiesClass(models.Model):  # lop sinh hoat,
@@ -114,8 +114,11 @@ class ActivitiesClass(models.Model):  # lop sinh hoat,
 
 class Student(models.Model):  # Thong tin hoc sinh
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, primary_key=True)
-    is_crew = models.BooleanField(default=False,null=False,blank=False,choices=[(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')],)  # Doan vien
+        User, on_delete=models.CASCADE, primary_key=True, related_name='student')
+    is_crew = models.BooleanField(default=False, null=False, blank=False,
+                                  choices=[(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')],)  # Doan vien
+    course_year = models.IntegerField(
+        default=date.today().year)  # khoa hoc, vidu:  K2008
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, null=True, blank=True,)  # id lop hoc
     objects = StudentManager()
@@ -166,7 +169,7 @@ class Subject(models.Model):  # cac mon hoc
         db_table = 'subject'
 
     def __str__(self):
-        return self.subject_name + ' - '+self.level
+        return self.subject_name + ' - ' + str(self.grades)
 
 
 class Lecture(models.Model):  # Giao vien day nhung mon nao
