@@ -348,6 +348,15 @@ class ActivitiesClassDetail(APIView):
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+class ActivitiesClassTeacher(generics.ListAPIView):
+    serializer_class = ActivitiesClassSerializer
+
+    def get_queryset(self):
+        teacher = self.kwargs['teacher_id']
+        schoolyear = self.kwargs['schoolyear_id']
+        return ActivitiesClass.objects.filter(form_teacher__user__id=teacher, school_year__id=schoolyear)
+
+
 """Conduct"""
 
 
@@ -393,6 +402,16 @@ class AcademicRecordDetail(APIView):
         academicrecord.delete()
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
+class StudentRecord(generics.ListAPIView):
+    serializer_class = AcamedicRecordSerializer
+
+    def get_queryset(self):
+        # teacher = self.request.user
+        # teacher = self.kwargs['teacher']
+        # schoolyear = self.kwargs['schoolyear']
+        studentId = self.kwargs['studentId']
+        return AcademicRecord.objects.filter(student=studentId)
 
 # class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
 #     serializer_class = ConductSerializer
@@ -509,7 +528,9 @@ class LectureList(generics.ListAPIView):
         # teacher = self.request.user
         teacher = self.kwargs['teacher']
         schoolyear = self.kwargs['schoolyear']
-        return Lecture.objects.filter(teacher__user__id=teacher, classes__id=1, school_year__id=schoolyear)
+        print(teacher)
+        print(schoolyear)
+        return Lecture.objects.filter(teacher__user__id=teacher, school_year__id=schoolyear)
 
 
 """Marks"""
@@ -558,16 +579,26 @@ class MarksDetail(APIView):
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class MarksOfClass(generics.ListAPIView):
+class MarkStudent(generics.ListAPIView):
     serializer_class = MarksSerializer
-    # serializer_class = LectureSerializer
 
     def get_queryset(self):
         # teacher = self.request.user
         # teacher = self.kwargs['teacher']
-        # schoolyear = self.kwargs['schoolyear']
+        studentId = self.kwargs['studentId']
+        school_year = self.kwargs['school_year']
+        return Marks.objects.filter(student=studentId, lecture__school_year__id=school_year).order_by('lecture', 'semester')
+
+
+class MarksOfClass(generics.ListAPIView):
+    serializer_class = MarksSerializer
+
+    def get_queryset(self):
+        # teacher = self.request.user
+        # teacher = self.kwargs['teacher']
+        studentId = self.kwargs['studentId']
         lecture_id = self.kwargs['lecture_id']
-        return Marks.objects.filter(lecture__id=lecture_id)
+        return Marks.objects.filter(student=studentId,  lecture__id=lecture_id)
 
 
 """Diem DGTX"""
@@ -648,18 +679,48 @@ class UploadFileForm(forms.Form):
 
 class ImportData(APIView):
     parser_class = (MultiPartParser,)
+    permission_classes = [IsAdminUser]
 
     def post(self, request, format=None):
+        if not request.user.is_superuser:
+            return render(
+                request, "admin/login.html"
+            )
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            try:
-                file_data_student = request.FILES["data_student"]
-                df = pd.read_excel(file_data_student,
-                                   sheet_name=0, index_col=0)
+            file_data_student = request.FILES["data_student"]
+            df = pd.read_excel(file_data_student,
+                               sheet_name=0, index_col=0)
 
-                print(df)
-            except:
-                pass
+            for row in df.itertuples():
+                classes = Classes.objects.filter(
+                    course_year=row[4], class_name__iexact=row[5]).first()
+                if classes is None:
+                    classes = Classes(
+                        class_name=row[5]
+                    )
+                    classes.save()
+                print(classes)
+                student = Student.objects.create(
+                    username=row[0],
+                    password=str(row[0]),
+                    first_name=row[1],
+                    last_name=row[2],
+                    gender=row[3],
+                    course_year=row[4],
+                    # birthday=row[''],
+                    # email=validated_data['user'].get('email', ''),
+                    # phone_number=validated_data['user'].get(
+                    #     'phone_number', ''),
+                    # address=validated_data['user'].get('address', ''),
+                    classes=classes,
+                    # is_crew=validated_data.get('is_crew', False),
+                )
+                print('tao tai khoan thanh cong')
+
+                # print(df.iloc[0])
+                # print(df.iloc[0][0])
+
         # print(reader)
         # Create Hero objects from passed in data
         # ...
@@ -667,6 +728,10 @@ class ImportData(APIView):
         return redirect("..")
 
     def get(self, request, fortmat=None):
+        if not request.user.is_superuser:
+            return render(
+                request, "admin/login.html"
+            )
         form = UploadFileForm()
         payload = {"form": form}
         return render(

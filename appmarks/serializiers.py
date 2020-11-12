@@ -43,13 +43,16 @@ class SchoolYearSerializer(serializers.ModelSerializer):
 
 
 class ClassesSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Classes
-        fields = ['id', 'class_name', 'course_year']
+        fields = ['id', 'class_name', 'course_year', 'student']
         read_only_fields = ['id']
 
 
 class ActivitiesClassSerializer(serializers.ModelSerializer):
+    classes= ClassesSerializer()
+    school_year=SchoolYearSerializer()
     class Meta:
         model = ActivitiesClass
         fields = ['id', 'classes', 'form_teacher', 'school_year']
@@ -79,23 +82,29 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class AcamedicRecordSerializer(serializers.ModelSerializer):
+    school_year = SchoolYearSerializer()
+
     class Meta:
         model = AcademicRecord
         fields = ['id', 'student', "school_year",
                   "gpa_first_semester", "gpa_second_semester", "gpa_year",
-                  "conduct_stsemester", "conduct_ndsemester", "conduct_gpasemester", "rating"
+                  "conduct_stsemester", "conduct_ndsemester", "conduct_gpasemester",
+                  "rating", "rating_stsemester", "rating_ndsemester"
                   ]
 
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
-        fields = ['id', 'student', 'school_year', 'gpa_first_semester',
-                  'gpa_second_semester', 'gpa_year', 'conduct_stsemester',
-                  'conduct_ndsemester', 'conduct_gpasemester', 'rating_year']
+        fields = ['id', 'subject_name', 'grades', 'descriptions']
 
 
 class LectureSerializer(serializers.ModelSerializer):
+    teacher = TeacherSerializer()
+    classes = ClassesSerializer()
+    school_year = SchoolYearSerializer()
+    subject = SubjectSerializer()
+
     class Meta:
         model = Lecture
         fields = ['id', 'teacher', 'subject',

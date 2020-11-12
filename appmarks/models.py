@@ -25,7 +25,7 @@ class TeacherManager(models.Manager):
 
 class StudentManager(models.Manager):
     def create(self, username, password, first_name, last_name, gender,
-               birthday, email, phone_number, address, is_crew, classes):
+               birthday=None, email='', phone_number='', address='', is_crew=0, classes=None, course_year=None):
         user = User(username=username, first_name=first_name, last_name=last_name, gender=gender,
                     birthday=birthday, email=email, phone_number=phone_number, address=address)
         user.set_password(password)
@@ -34,6 +34,7 @@ class StudentManager(models.Manager):
             user=user,
             is_crew=is_crew,
             classes=classes,
+            course_year=course_year
         )
         student.save()
         return student
@@ -42,7 +43,7 @@ class StudentManager(models.Manager):
 class Department(models.Model):  # bo mon, bo phan, to^~ nao
     id = models.AutoField(primary_key=True)
     department_name = models.CharField(max_length=100)
-    introduction = models.TextField(default='')
+    introduction = models.TextField(default='', null=True, blank=True)
 
     class Meta:
         db_table = 'department'
@@ -79,25 +80,29 @@ class SchoolYear(models.Model):  # Nam hoc
         return str(self.from_year.year) + ' - ' + str(self.to_year.year)
 
 
-class Classes(models.Model):  # Lop sinh hoat
+class Classes(models.Model):  # Lop nao
     id = models.BigAutoField(primary_key=True)
     class_name = models.CharField(null=False, max_length=10)  # vi du: A2
-    course_year = models.DateField(
-        default=date.today)  # khoa hoc, vidu:  K2008
+    course_year = models.IntegerField(
+        default=date.today().year)
 
     class Meta:
         db_table = 'classes'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['class_name', 'course_year'], name='unique_classes')
+        ]
 
     def __str__(self):
-        return str(self.class_name)+' K_'+str(self.course_year.year)
+        return str(self.class_name)+' K_'+str(self.course_year)
 
 
-class ActivitiesClass(models.Model):  # lop sinh hoat,
+class ActivitiesClass(models.Model):  # lop chu nhiem
     id = models.BigAutoField(primary_key=True)
     classes = models.ForeignKey(
-        Classes, on_delete=models.DO_NOTHING)  # id lop hoc
+        Classes, on_delete=models.DO_NOTHING, related_name='activities_class')  # id lop hoc
     form_teacher = models.ForeignKey(
-        Teacher, on_delete=models.DO_NOTHING)  # GV chu nhiem
+        Teacher, on_delete=models.DO_NOTHING, related_name='activities_class')  # GV chu nhiem
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='activities_class')
 
@@ -108,8 +113,8 @@ class ActivitiesClass(models.Model):  # lop sinh hoat,
                 fields=['classes', 'form_teacher', 'school_year'], name='unique_activitiesclass')
         ]
 
-    # def __str__(self):
-    #     return str(self.class_name)
+    def __str__(self):
+        return str(self.classes)+' - '+str(self.form_teacher)
 
 
 class Student(models.Model):  # Thong tin hoc sinh
@@ -120,7 +125,9 @@ class Student(models.Model):  # Thong tin hoc sinh
     course_year = models.IntegerField(
         default=date.today().year)  # khoa hoc, vidu:  K2008
     classes = models.ForeignKey(
-        Classes, on_delete=models.DO_NOTHING, null=True, blank=True,)  # id lop hoc
+        Classes, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='student')  # id lop hoc
+    is_graduate = models.BooleanField(default=False, null=False, blank=False,
+                                      choices=[(0, 'Chưa tốt nghiệp'), (1, 'Đã tốt nghiệp')],)
     objects = StudentManager()
 
     class Meta:
@@ -142,10 +149,12 @@ class AcademicRecord(models.Model):  # ket qua hoc tap va ren luyen theo nam hoc
     gpa_year = models.DecimalField(
         max_digits=3, decimal_places=1, default=0.0)  # diem trung binh ca nam hoc
     # hanh kiem hoc ky 1 1,2,3,4,5 tuong ung voi kem,yeu,tb,kha, tot
-    conduct_stsemester = models.IntegerField(null=True)
+    conduct_stsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 1
     conduct_ndsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 2
     conduct_gpasemester = models.IntegerField(null=True)  # hanh kiem ca nam
-    rating = models.IntegerField(null=True)
+    rating = models.IntegerField(null=True)  # xep loai ca nam
+    rating_stsemester = models.IntegerField(null=True)  # xep loai hoc ky 1
+    rating_ndsemester = models.IntegerField(null=True)  # xep loai hoc ky 2
 
     class Meta:
         db_table = 'academicrecord'

@@ -39,7 +39,6 @@ class CustomUserAdmin(BaseUserAdmin):
         ('More infor', {'fields': ('is_teacher',
                                    'gender', 'birthday', 'phone_number', 'address')}),
     )
-    # actions = ['set_is_teacher', 'set_user_student']
     list_display = ['username', 'first_name',
                     'last_name', 'email', 'is_staff', 'is_teacher']
     list_per_page = 50
@@ -65,18 +64,15 @@ class CustomUserAdmin(BaseUserAdmin):
         ) % student, messages.SUCCESS)
     set_user_student.short_description = "Set user is Student"
 
-    def save_model(self, request, obj, form, change):
-        # obj.added_by = request.user
-        print('save user from import')
-        super().save_model(request, obj, form, change)
-
-
 # STUDENT
+
 
 class StudentInline(admin.StackedInline):
     model = Student
     can_delete = False
+    verbose_name = "Student ID"
     verbose_name_plural = 'Student Information'
+    extra = 0
 
 
 class StudentUser(CustomUser):
@@ -93,10 +89,6 @@ class StudentResource(resources.ModelResource):
         # export_order = ()
 
 
-class CsvImportForm(forms.Form):
-    csv_file = forms.FileField()
-
-
 class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     model = Student
     resource_class = StudentResource
@@ -111,7 +103,12 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
         }),
     )
     list_display = ['username', 'first_name',
-                    'last_name', 'email', 'get_classes', 'get_course_year', ]
+                    'last_name', 'birthday', 'gender',  'email', 'get_course_year', 'get_classes', ]
+    search_fields = ['class_name', ]
+    list_filter = ('student__course_year',
+                   'student__is_crew', 'student__is_graduate')
+    odering=['student__is_graduate']
+    list_per_page = 50
 
     def get_urls(self):
         urls = super().get_urls()
@@ -120,23 +117,6 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
         ]
         return my_urls + urls
 
-    # def import_csv(self, request):
-    #     if request.method == "POST":
-    #         csv_file = request.FILES["csv_file"]
-    #         # reader = csv.reader(csv_file)
-    #         df = pd.read_excel(csv_file, sheet_name=0, index_col=0)
-    #         print(df)
-    #         # print(reader)
-    #         # Create Hero objects from passed in data
-    #         # ...
-    #         self.message_user(request, "Your csv file has been imported")
-    #         return redirect("..")
-    #     form = CsvImportForm()
-    #     payload = {"form": form}
-    #     return render(
-    #         request, "admin/csv_form.html", payload
-    #     )
-
     def get_classes(self, CustomUser):
         return CustomUser.student.classes
     get_classes.short_description = 'Class'
@@ -144,15 +124,10 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     def get_course_year(self, CustomUser):
         return CustomUser.student.course_year
     get_course_year.short_description = 'CourseYear'
-    list_filter = ('student__course_year', 'student__is_crew',)
-
-    list_per_page = 50
-#     search_fields = ['class_name', 'school_year__from_year',
-#                      'form_teacher__user__username']
 
     def get_queryset(self, request):
-        # return Student.objects.select_related('user').all()
-        return CustomUser.objects.filter(is_teacher=False, is_superuser=False)
+        return CustomUser.objects.filter(is_teacher=False, is_superuser=False, is_staff=False,
+                                         is_active=True)
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
@@ -174,6 +149,7 @@ class TeacherInline(admin.StackedInline):
     model = Teacher
     can_delete = False
     verbose_name_plural = 'Teacher Information'
+    verbose_name = 'Teacher ID'
 
 
 class TeacherUser(CustomUser):
@@ -185,7 +161,6 @@ class TeacherUser(CustomUser):
 class TeacherAdmin(BaseUserAdmin):
     model = Teacher
     inlines = (TeacherInline,)
-
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name',
@@ -195,10 +170,14 @@ class TeacherAdmin(BaseUserAdmin):
         }),
     )
     list_display = ['username', 'first_name',
-                    'last_name', 'email', 'is_staff']
+                    'last_name', 'email', 'is_staff', 'get_department']
+
+    def get_department(self, CustomUser):
+        return CustomUser.teacher.department
+    get_department.short_description = 'Department'
 
     def get_queryset(self, request):
-        return CustomUser.objects.filter(is_teacher=True, is_superuser=False)
+        return CustomUser.objects.filter(is_teacher=True, is_superuser=False, is_staff=False, is_active=True)
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
@@ -214,32 +193,124 @@ class TeacherAdmin(BaseUserAdmin):
         for formset in formsets:
             self.save_formset(request, form, formset, change=change)
 
+# DEPARTMENT
+
+
+class TeacherInlineDepartment(admin.StackedInline):
+    model = Teacher
+    can_delete = False
+    verbose_name_plural = 'List Teacher'
+    verbose_name = 'Teacher'
+    extra = 0
+    readonly_fields = ['user']
+
 
 class DepartmentAdmin(admin.ModelAdmin):
-    pass
+    inlines = [TeacherInlineDepartment]
+    list_display = ['department_name', 'count_teacher']
+    search_fields = ['department_name', 'introduction']
+    ordering = ['department_name']
+
+    def count_teacher(self, Department):
+        return Department.teacher.count()
+    count_teacher.short_description = 'Quantum Teacher'
+
+# CLASS
+
+
+class StudentInlineClass(admin.StackedInline):
+    model = Student
+    can_delete = False
+    verbose_name_plural = 'List Student'
+    verbose_name = "Student ID"
+    extra = 0
 
 
 class ClassesAdmin(admin.ModelAdmin):
-    pass
+    inlines = [StudentInlineClass]
+    list_display = ['class_name', 'course_year', 'count_student', ]
+    search_fields = ['class_name', 'course_year', ]
+    list_filter = ['course_year']
+    ordering = ['course_year', 'class_name']
+    list_per_page = 50
+
+    def count_student(self, Classes):
+        return Classes.student.count()
+    count_student.short_description = 'Quantum Student'
 
 
 class ActivitiesClassAdmin(admin.ModelAdmin):
     pass
 
+# NAM HOC
+
 
 class SchoolYearAdmin(admin.ModelAdmin):
-    pass
+    actions = ['set_academicrecord']
+    list_display = ['from_year', 'to_year', 'count_class']
+
+    def count_class(self, SchoolYear):
+        return SchoolYear.activities_class.count()
+    count_class.short_description = 'Quantum class'
+
+    def set_academicrecord(self, request, queryset):
+        print(queryset)
+        students = Student.objects.filter(is_graduate=False)
+
+        for school_year in queryset:
+            for student in students:
+                academic_record = AcademicRecord(
+                    student=student,
+                    school_year=school_year
+                )
+                academic_record.save()
+    set_academicrecord.short_description = "Add new AcademicRecord for all Student"
 
 
 class SubjectAdmin(admin.ModelAdmin):
     pass
 
+# LECTURE
+
+
+# class StudentInlineLecture(admin.StackedInline):
+#     model = Student
+#     verbose_name_plural = 'List Student'
+#     verbose_name = 'Student ID'
+#     readonly_fields = ['user']
+
+class MarksInlineLecture(admin.StackedInline):
+    model = Marks
+    verbose_name_plural = 'List Marks'
+    vervose_name = 'Mark ID'
+    extra = 0
+
 
 class LectureAdmin(admin.ModelAdmin):
+    inlines = [MarksInlineLecture]
+    list_display = ['teacher', 'subject', 'classes', 'school_year']
+
     pass
 
 
 class AcademicRecordAdmin(admin.ModelAdmin):
+    list_display = ['student', 'get_fullname', 'get_course_year', 'get_class', 'school_year',
+                    'gpa_year', 'conduct_gpasemester', 'rating', ]
+    list_select_related = ['student']
+    ordering = ['school_year', 'student__classes', 'student', ]
+
+    def get_fullname(self, AcademicRecord):
+        return AcademicRecord.student.user.first_name+' '+AcademicRecord.student.user.last_name
+    get_fullname.short_description = 'FULL NAME'
+
+    def get_class(self, AcademicRecord):
+        return AcademicRecord.student.classes.class_name
+    get_class.short_description = 'Classes'
+
+    def get_course_year(self, AcademicRecord):
+        return AcademicRecord.student.course_year
+    get_course_year.short_description = 'course year'
+
     pass
 
 
@@ -249,18 +320,6 @@ class MarksAdmin(admin.ModelAdmin):
 
 class MarksRegularyAdmin(admin.ModelAdmin):
     pass
-
-
-class StudentUser2(Student):
-    class Meta:
-        proxy = True
-        verbose_name = 'Student'
-
-
-class UserInline(admin.StackedInline):
-    model = CustomUser
-    can_delete = False
-    verbose_name_plural = 'Student Information'
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

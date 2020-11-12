@@ -5,6 +5,21 @@
 # # print(date.today)
 
 
+def tinhtienluong(**kwargs):
+    # print(kwargs['luongthang'])
+    # for i in kwargs.items():
+    for k in kwargs.items():
+        print(k)
+        # user.k=v
+        # print(k,)
+    # print()
+
+
+luong = {'luongthang': 10000000, 'luongthuong': 10000000}
+luong2 = dict(luongthang=10000000, luongthuong=1000000)
+tinhtienluong(**luong)
+
+
 # aa={"name":"Name","tuoi":"19"}
 # xx=aa.get('ho')
 # print(xx)
@@ -21,13 +36,11 @@
 #         return instance
 
 
-
-
 # class UserWithProfileAdmin(BaseUserAdmin):
 #     add_form = FormTeacher
 #     add_fieldsets = (
 #         (None, {
-         
+
 #             # add any custom fields here
 #             'fields': ('username',),
 #         }),

@@ -14,7 +14,12 @@ from appmarks.views import (
     StudentsOfClass2,
 
     AddStudent,
-    ImportData
+    ImportData,
+    StudentRecord,
+    MarkStudent,
+    ActivitiesClassView,
+    ActivitiesClassDetail,
+    ActivitiesClassTeacher
 )
 app_name = 'appmarks'
 urlpatterns = [
@@ -24,6 +29,12 @@ urlpatterns = [
     path('departments/', DepartmentView.as_view()),
     path('departments/<int:pk>/', DepartmentDetail.as_view(),
          name='department-detail'),
+
+    path('activitiesclass/', ActivitiesClassView.as_view()),
+    path('activitiesclass/<int:pk>/', ActivitiesClassDetail.as_view(),
+         name='activitiesclass-detail'),
+    path('activitiesclass/teacher/<int:teacher_id>/schoolyear/<int:schoolyear_id>/',
+         ActivitiesClassTeacher.as_view(),),
 
     path('teachers/', TeacherView.as_view()),
     path('teachers/<int:pk>/', TeacherDetail.as_view(), name='teacher-detail'),
@@ -42,19 +53,24 @@ urlpatterns = [
     path('students/<int:pk>/', StudentDetail.as_view(), name='student-detail'),
     path('students/lectures/', StudentsOfClass2.as_view(), name='student-detail2'),
 
-    path('AcademicRecord/', AcademicRecordView.as_view()),
-    path('AcademicRecord/<int:pk>/', AcademicRecordDetail.as_view(),
+    path('academicrecord/', AcademicRecordView.as_view()),
+    path('academicrecord/<int:pk>/', AcademicRecordDetail.as_view(),
          name='conduct-detail'),
+    path('academicrecord/student/<int:studentId>/', StudentRecord.as_view()),
+
     # path('AcademicRecord/classes/<int:class_id>/',
     #      StudentsOfClass.as_view(), name='student-class'),
 
     path('lectures/', LectureView.as_view()),
     path('lectures/<int:pk>/', LectureDetail.as_view(), name='lecture-detail'),
     # nam hoc nao giao vien nao day nhung gi
-    # path('lectures/<int:teacher>/<int:schoolyear>/', LectureList.as_view()),
+    path('lectures/teacher/<int:teacher>/schoolyear/<int:schoolyear>/',
+         LectureList.as_view()),
 
     path('marks/', MarksView.as_view(), name='list-marks'),
     path('marks/<int:pk>/', MarksDetail.as_view(), name='marks-detail'),
+    path('marks/student/<int:studentId>/school_year/<int:school_year>/',
+         MarkStudent.as_view(), name='marks-detail'),
     # path('marks/lecture/<int:lecture_id>/',
     #      MarksOfClass.as_view(), name='marks-lecture'),
 

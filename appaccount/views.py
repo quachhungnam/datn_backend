@@ -54,6 +54,7 @@ class UserDetail(APIView):
 
     def patch(self, request, pk, format=None):
         user = self.get_object(pk)
+        print(request.data)
         if request.data.get('password') is not None:
             del request.data['password']
         serializer = UserSerializer(user, data=request.data, partial=True)

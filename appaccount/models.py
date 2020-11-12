@@ -7,7 +7,7 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     is_teacher = models.BooleanField(default=False)
     gender = models.BooleanField(
-        choices=[(1, 'MALE'), (0, 'FEMALE')], null=True, blank=True)
+        null=True, blank=True, choices=[(0, 'Nữ'), (1, 'Nam')],)
     birthday = models.DateField(blank=True, null=True)
     phone_number = models.CharField(
         default='', null=True, blank=True, max_length=15)
