@@ -107,7 +107,7 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     search_fields = ['class_name', ]
     list_filter = ('student__course_year',
                    'student__is_crew', 'student__is_graduate')
-    odering=['student__is_graduate']
+    odering = ['student__is_graduate']
     list_per_page = 50
 
     def get_urls(self):
@@ -289,8 +289,21 @@ class MarksInlineLecture(admin.StackedInline):
 class LectureAdmin(admin.ModelAdmin):
     inlines = [MarksInlineLecture]
     list_display = ['teacher', 'subject', 'classes', 'school_year']
+    actions = ['add_marks_class']
 
-    pass
+    def add_marks_class(self, request, queryset):
+        for lecture in queryset:
+            print(lecture.classes)
+            students = Student.objects.filter(
+                is_graduate=False, classes=lecture.classes)
+
+            for student in students:
+                marks = Marks(
+                    student=student,
+                    lecture=lecture
+                )
+                marks.save()
+    add_marks_class.short_description = "Add mark for all Student of lecture"
 
 
 class AcademicRecordAdmin(admin.ModelAdmin):

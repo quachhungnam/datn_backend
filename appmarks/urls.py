@@ -11,15 +11,16 @@ from appmarks.views import (
     LectureList,
     # StudentsOfClass,
     # MarksOfClass,
-    StudentsOfClass2,
-
+    StudentsOfClass,
     AddStudent,
     ImportData,
     StudentRecord,
     MarkStudent,
     ActivitiesClassView,
     ActivitiesClassDetail,
-    ActivitiesClassTeacher
+    ActivitiesClassTeacher,
+    StudentsOfLecture,
+    MarksOfLecture
 )
 app_name = 'appmarks'
 urlpatterns = [
@@ -51,7 +52,10 @@ urlpatterns = [
 
     path('students/', StudentView.as_view()),
     path('students/<int:pk>/', StudentDetail.as_view(), name='student-detail'),
-    path('students/lectures/', StudentsOfClass2.as_view(), name='student-detail2'),
+    path('students/classes/<int:class_id>/schoolyear/<int:school_year_id>/',
+         StudentsOfClass.as_view(), name='student-detail2'),
+    path('students/lecture/<int:lecture_id>/',
+         StudentsOfLecture.as_view(), name='student-detail3'),
 
     path('academicrecord/', AcademicRecordView.as_view()),
     path('academicrecord/<int:pk>/', AcademicRecordDetail.as_view(),
@@ -71,8 +75,8 @@ urlpatterns = [
     path('marks/<int:pk>/', MarksDetail.as_view(), name='marks-detail'),
     path('marks/student/<int:studentId>/school_year/<int:school_year>/',
          MarkStudent.as_view(), name='marks-detail'),
-    # path('marks/lecture/<int:lecture_id>/',
-    #      MarksOfClass.as_view(), name='marks-lecture'),
+    path('marks/lecture/<int:lecture_id>/',
+         MarksOfLecture.as_view(), name='marks-lecture'),
 
     path('marksregularys/', MarksRegularyView.as_view()),
     path('marksregularys/<int:pk>/', MarksRegularyDetail.as_view(),

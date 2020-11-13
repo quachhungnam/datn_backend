@@ -51,8 +51,9 @@ class ClassesSerializer(serializers.ModelSerializer):
 
 
 class ActivitiesClassSerializer(serializers.ModelSerializer):
-    classes= ClassesSerializer()
-    school_year=SchoolYearSerializer()
+    classes = ClassesSerializer()
+    school_year = SchoolYearSerializer()
+
     class Meta:
         model = ActivitiesClass
         fields = ['id', 'classes', 'form_teacher', 'school_year']
@@ -112,11 +113,14 @@ class LectureSerializer(serializers.ModelSerializer):
 
 
 class MarksSerializer(serializers.ModelSerializer):
+    student = StudentSerializer()
+    lecture=LectureSerializer()
     class Meta:
         model = Marks
         fields = ['id', 'student', 'lecture',
-                  'semester', 'mid_semester_point', 'gpa_semester_point',
-                  'gpa_year_point', 'is_public', 'is_locked', 'due_input']
+                  'mid_stsemester_point', 'end_stsemester_point', 'gpa_stsemester_point',
+                  'mid_ndsemester_point', 'end_ndsemester_point', 'gpa_ndsemester_point',
+                  'gpa_year_point', 'is_public', 'is_locked', 'due_input_st', 'due_input_nd', 'marksregulary']
 
 
 class MarksRegularySerializer(serializers.ModelSerializer):

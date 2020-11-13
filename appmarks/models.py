@@ -208,30 +208,35 @@ class Marks(models.Model):
         Student, on_delete=models.DO_NOTHING, related_name='marks_student')
     lecture = models.ForeignKey(
         Lecture, on_delete=models.DO_NOTHING, related_name='marks_lecture')
-    semester = models.IntegerField(
-        null=True, default=1)  # ma hoc ky, 1 hoac 2
     # time = models.IntegerField(null=True, blank=True)
-    mid_semester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem giua ky mon hoc
-    end_semester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem cuoi ky mon hoc
-    gpa_semester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem trung binh ky mon hoc
+    mid_stsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem giua ky 1 mon hoc
+    end_stsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem cuoi ky 1 mon hoc
+    gpa_stsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem trung binh ky 1 mon hoc
+    mid_ndsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem giua ky 2 mon hoc
+    end_ndsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem cuoi ky 2 mon hoc
+    gpa_ndsemester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True)  # diem trung binh ky 2 mon hoc
     gpa_year_point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True)  # diem trung binh mon ca nam
-    # true =cho hoc sinh xem diem
+    # true =cho hoc sinh xem y
     is_public = models.BooleanField(
         choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)
     # false admin khong cho chinh sua diem
     is_locked = models.BooleanField(
         choices=[(0, 'UN_LOCKED'), (1, 'LOCKED')], default=False)
-    due_input = models.DateField(default=date.today)  # han nhap diem
+    due_input_st = models.DateField(default=date.today)  # han nhap diem
+    due_input_nd = models.DateField(default=date.today)  # han nhap diem
 
     class Meta:
         db_table = 'marks'
         constraints = [
             models.UniqueConstraint(
-                fields=['student', 'lecture', 'semester'], name='unique_student_lecture_semester')
+                fields=['student', 'lecture', ], name='unique_student_lecture')
         ]
 
     def __str__(self):
@@ -242,8 +247,8 @@ class MarksRegulary(models.Model):
     id = models.BigAutoField(primary_key=True)
     student = models.ForeignKey(
         Student, on_delete=models.DO_NOTHING, related_name='marksregulary_student')
-    lecture = models.ForeignKey(
-        Lecture, on_delete=models.DO_NOTHING, related_name='marksregulary_lecture')
+    marks_ref = models.ForeignKey(
+        Marks, on_delete=models.DO_NOTHING, related_name='marksregulary',null=True,blank=True)
     semester = models.IntegerField(
         null=True, default=1)  # ma hoc ky, 1 hoac 2
     test_date = models.DateTimeField(default=timezone.now)

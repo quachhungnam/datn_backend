@@ -301,6 +301,26 @@ class StudentDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class StudentsOfClass(generics.ListAPIView):
+    serializer_class = StudentSerializer
+
+    def get_queryset(self):
+        classes = self.kwargs['class_id']
+        school_year = self.kwargs['school_year_id']
+        # schoolyear = self.kwargs['schoolyear']
+        return Student.objects.filter(marks_student__lecture__classes=classes, marks_student__lecture__school_year=school_year)
+
+
+class StudentsOfLecture(generics.ListAPIView):
+    serializer_class = StudentSerializer
+
+    def get_queryset(self):
+        lecture = self.kwargs['lecture_id']
+        # school_year= self.kwargs['school_year_id']
+        # schoolyear = self.kwargs['schoolyear']
+        return Student.objects.filter(marks_student__lecture=lecture)
+
+
 """ActivitiesClass"""
 
 
@@ -420,15 +440,6 @@ class StudentRecord(generics.ListAPIView):
 #         class_id = self.kwargs['class_id']
 #         # schoolyear = self.kwargs['schoolyear']
 #         return Conduct.objects.filter(classes__id=class_id)
-
-
-class StudentsOfClass2(generics.ListAPIView):
-    serializer_class = StudentSerializer
-
-    def get_queryset(self):
-        # class_id = self.kwargs['class_id']
-        # schoolyear = self.kwargs['schoolyear']
-        return Student.objects.filter(classes=1)
 
 
 """Subject"""
@@ -587,7 +598,7 @@ class MarkStudent(generics.ListAPIView):
         # teacher = self.kwargs['teacher']
         studentId = self.kwargs['studentId']
         school_year = self.kwargs['school_year']
-        return Marks.objects.filter(student=studentId, lecture__school_year__id=school_year).order_by('lecture', 'semester')
+        return Marks.objects.filter(student=studentId, lecture__school_year__id=school_year).order_by('lecture')
 
 
 class MarksOfClass(generics.ListAPIView):
@@ -599,6 +610,17 @@ class MarksOfClass(generics.ListAPIView):
         studentId = self.kwargs['studentId']
         lecture_id = self.kwargs['lecture_id']
         return Marks.objects.filter(student=studentId,  lecture__id=lecture_id)
+
+
+class MarksOfLecture(generics.ListAPIView):
+    serializer_class = MarksSerializer
+
+    def get_queryset(self):
+        # teacher = self.request.user
+        # teacher = self.kwargs['teacher']
+        # studentId = self.kwargs['studentId']
+        lecture_id = self.kwargs['lecture_id']
+        return Marks.objects.filter(lecture__id=lecture_id)
 
 
 """Diem DGTX"""
