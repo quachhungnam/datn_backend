@@ -3,14 +3,12 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from appmarks.views import (
     DepartmentView, DepartmentDetail, TeacherView, TeacherDetail, SubjectView, SubjectDetail,
     ClassesView, ClassesDetail, SchoolYearView, SchoolYearDetail, StudentView, StudentDetail,
-    AcademicRecordView, AcademicRecordDetail, LectureView, LectureDetail,
+    LearningOutcomesView, LearningOutcomesDetail, LectureView, LectureDetail,
     MarksView, MarksDetail, MarksRegularyView, MarksRegularyDetail,
     ActivitiesClassView,
     ActivitiesClassDetail,
-
     LectureList,
     # StudentsOfClass,
-    # MarksOfClass,
     StudentsOfClass,
     AddStudent,
     ImportData,
@@ -20,7 +18,9 @@ from appmarks.views import (
     ActivitiesClassDetail,
     ActivitiesClassTeacher,
     StudentsOfLecture,
-    MarksOfLecture
+    MarksOfLecture,
+    MarksByYear,
+    MarksOfClass
 )
 app_name = 'appmarks'
 urlpatterns = [
@@ -57,10 +57,10 @@ urlpatterns = [
     path('students/lecture/<int:lecture_id>/',
          StudentsOfLecture.as_view(), name='student-detail3'),
 
-    path('academicrecord/', AcademicRecordView.as_view()),
-    path('academicrecord/<int:pk>/', AcademicRecordDetail.as_view(),
+    path('learningoutcome/', LearningOutcomesView.as_view()),
+    path('learningoutcome/<int:pk>/', LearningOutcomesDetail.as_view(),
          name='conduct-detail'),
-    path('academicrecord/student/<int:studentId>/', StudentRecord.as_view()),
+    path('learningoutcome/student/<int:studentId>/', StudentRecord.as_view()),
 
     # path('AcademicRecord/classes/<int:class_id>/',
     #      StudentsOfClass.as_view(), name='student-class'),
@@ -73,10 +73,16 @@ urlpatterns = [
 
     path('marks/', MarksView.as_view(), name='list-marks'),
     path('marks/<int:pk>/', MarksDetail.as_view(), name='marks-detail'),
-    path('marks/student/<int:studentId>/school_year/<int:school_year>/',
-         MarkStudent.as_view(), name='marks-detail'),
+
+    path('marks/student/<int:studentId>/',
+         MarkStudent.as_view(), name='marks-all-year'),
+    path('marks/student/<int:studentId>/schoolyear/<int:school_year>/',
+         MarksByYear.as_view(), name='marks-by-year'),
     path('marks/lecture/<int:lecture_id>/',
          MarksOfLecture.as_view(), name='marks-lecture'),
+
+    path('marks/classes/<int:class_id>/schoolyear/<int:year_id>/',
+         MarksOfClass.as_view(), name='marks-of-class'),
 
     path('marksregularys/', MarksRegularyView.as_view()),
     path('marksregularys/<int:pk>/', MarksRegularyDetail.as_view(),

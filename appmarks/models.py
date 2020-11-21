@@ -42,7 +42,8 @@ class StudentManager(models.Manager):
 
 class Department(models.Model):  # bo mon, bo phan, to^~ nao
     id = models.AutoField(primary_key=True)
-    department_name = models.CharField(max_length=100)
+    department_name = models.CharField(
+        default='', null=True, blank=True, max_length=100)
     introduction = models.TextField(default='', null=True, blank=True)
 
     class Meta:
@@ -69,15 +70,15 @@ class Teacher(models.Model):  # Giao vien
 
 class SchoolYear(models.Model):  # Nam hoc
     id = models.BigAutoField(primary_key=True)
-    from_year = models.DateField(default=date.today)
-    to_year = models.DateField(default=date.today)
+    from_year = models.IntegerField(default=date.today().year)
+    to_year = models.IntegerField(default=date.today().year+1)
     status = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'schoolyear'
 
     def __str__(self):
-        return str(self.from_year.year) + ' - ' + str(self.to_year.year)
+        return str(self.from_year) + ' - ' + str(self.to_year)
 
 
 class Classes(models.Model):  # Lop nao
@@ -101,7 +102,7 @@ class ActivitiesClass(models.Model):  # lop chu nhiem
     id = models.BigAutoField(primary_key=True)
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, related_name='activities_class')  # id lop hoc
-    form_teacher = models.ForeignKey(
+    admin_teacher = models.ForeignKey(
         Teacher, on_delete=models.DO_NOTHING, related_name='activities_class')  # GV chu nhiem
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='activities_class')
@@ -110,24 +111,27 @@ class ActivitiesClass(models.Model):  # lop chu nhiem
         db_table = 'activitiesclass'
         constraints = [
             models.UniqueConstraint(
-                fields=['classes', 'form_teacher', 'school_year'], name='unique_activitiesclass')
+                fields=['classes', 'admin_teacher', 'school_year'], name='unique_activitiesclass')
         ]
 
     def __str__(self):
-        return str(self.classes)+' - '+str(self.form_teacher)
+        return str(self.classes)+' - '+str(self.admin_teacher)
 
 
 class Student(models.Model):  # Thong tin hoc sinh
+    CREW_CHOICES = [(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')]
+    GRADUATE_CHOICES = [(0, 'Chưa tốt nghiệp'), (1, 'Đã tốt nghiệp')]
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name='student')
-    is_crew = models.BooleanField(default=False, null=False, blank=False,
-                                  choices=[(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')],)  # Doan vien
-    course_year = models.IntegerField(
-        default=date.today().year)  # khoa hoc, vidu:  K2008
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='student')  # id lop hoc
+    is_crew = models.BooleanField(default=False, null=False, blank=False,
+                                  choices=CREW_CHOICES)  # Doan vien
+    course_year = models.IntegerField(
+        default=date.today().year)  # khoa hoc, vidu:  K2008
+
     is_graduate = models.BooleanField(default=False, null=False, blank=False,
-                                      choices=[(0, 'Chưa tốt nghiệp'), (1, 'Đã tốt nghiệp')],)
+                                      choices=GRADUATE_CHOICES)
     objects = StudentManager()
 
     class Meta:
@@ -136,31 +140,47 @@ class Student(models.Model):  # Thong tin hoc sinh
     def __str__(self):
         return str(self.user)
 
+# ket qua hoc tap va ren luyen theo nam hoc
 
-class AcademicRecord(models.Model):  # ket qua hoc tap va ren luyen theo nam hoc
+
+class LearningOutcomes(models.Model):
+    RATING_CHOICES = [
+        (0, 'Kém'), (1, 'Yếu'),
+        (2, 'Trung bình'), (3, 'Khá'), (4, 'Giỏi')]
+    CONDUCT_CHOICES = [
+        (1, 'Yếu'), (2, 'Trung bình'), (3, 'Khá'), (4, 'Tốt')
+    ]
     id = models.BigAutoField(primary_key=True)
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
     school_year = models.ForeignKey(
-        SchoolYear, on_delete=models.DO_NOTHING, related_name='academic_record')
-    gpa_first_semester = models.DecimalField(
+        SchoolYear, on_delete=models.DO_NOTHING, related_name='learningoutcomes')
+    st_semester_gpa = models.DecimalField(
         max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk1
-    gpa_second_semester = models.DecimalField(
+    nd_semester_gpa = models.DecimalField(
         max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk2
-    gpa_year = models.DecimalField(
+    year_gpa = models.DecimalField(
         max_digits=3, decimal_places=1, default=0.0)  # diem trung binh ca nam hoc
-    # hanh kiem hoc ky 1 1,2,3,4,5 tuong ung voi kem,yeu,tb,kha, tot
-    conduct_stsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 1
-    conduct_ndsemester = models.IntegerField(null=True)  # hanh kiem hoc ky 2
-    conduct_gpasemester = models.IntegerField(null=True)  # hanh kiem ca nam
-    rating = models.IntegerField(null=True)  # xep loai ca nam
-    rating_stsemester = models.IntegerField(null=True)  # xep loai hoc ky 1
-    rating_ndsemester = models.IntegerField(null=True)  # xep loai hoc ky 2
+
+    # Xep loai hanh kiem 1,2,3,4
+    st_semester_conduct = models.IntegerField(
+        null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 1
+    nd_semester_conduct = models.IntegerField(
+        null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 2
+    year_conduct = models.IntegerField(
+        null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem ca nam
+
+    st_semester_rating = models.IntegerField(
+        null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 1
+    nd_semester_rating = models.IntegerField(
+        null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 2
+    year_rating = models.IntegerField(
+        null=True, blank=True, choices=RATING_CHOICES)  # xep loai ca nam
 
     class Meta:
-        db_table = 'academicrecord'
+        db_table = 'learningoutcomes'
         constraints = [
             models.UniqueConstraint(
-                fields=['student', 'school_year'], name='unique_student_school_year')
+                fields=['student', 'school_year'], name='unique_learningoutcomes')
         ]
 
     def __str__(self):
@@ -168,11 +188,13 @@ class AcademicRecord(models.Model):  # ket qua hoc tap va ren luyen theo nam hoc
 
 
 class Subject(models.Model):  # cac mon hoc
+    GRADES_CHOICE = [(10, 'Lớp 10'), (11, 'Lớp 11'), (12, 'Lớp 12')]
     id = models.BigAutoField(primary_key=True)
-    subject_name = models.CharField(max_length=50, null=True)
-    grades = models.IntegerField(choices=[(10, 'Grades 10'), (11, 'Grades 11'), (12, 'Grades 12')],
-                                 validators=[MinValueValidator(10), MaxValueValidator(12)])  # lop 10,11,12
-    descriptions = models.TextField(default='', null=True)
+    subject_name = models.CharField(
+        default='', null=True, blank=True, max_length=50)
+    grades = models.IntegerField(choices=GRADES_CHOICE,
+                                 validators=[MinValueValidator(10), MaxValueValidator(12)])
+    descriptions = models.TextField(default='', null=True, blank=True)
 
     class Meta:
         db_table = 'subject'
@@ -189,7 +211,6 @@ class Lecture(models.Model):  # Giao vien day nhung mon nao
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='lecture')
     status = models.BooleanField(default=True)
-    # classs = models.ForeignKey
 
     class Meta:
         db_table = 'lecture'
@@ -208,29 +229,35 @@ class Marks(models.Model):
         Student, on_delete=models.DO_NOTHING, related_name='marks_student')
     lecture = models.ForeignKey(
         Lecture, on_delete=models.DO_NOTHING, related_name='marks_lecture')
-    # time = models.IntegerField(null=True, blank=True)
-    mid_stsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem giua ky 1 mon hoc
-    end_stsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem cuoi ky 1 mon hoc
-    gpa_stsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem trung binh ky 1 mon hoc
-    mid_ndsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem giua ky 2 mon hoc
-    end_ndsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem cuoi ky 2 mon hoc
-    gpa_ndsemester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem trung binh ky 2 mon hoc
+
+    mid_st_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem giua ky 1 mon hoc
+    end_st_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem cuoi ky 1 mon hoc
+    gpa_st_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 1 mon hoc
+
+    mid_nd_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem giua ky 2 mon hoc
+    end_nd_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem cuoi ky 2 mon hoc
+    gpa_nd_semester_point = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 2 mon hoc
+
     gpa_year_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True)  # diem trung binh mon ca nam
+        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh mon ca nam
+
     # true =cho hoc sinh xem y
     is_public = models.BooleanField(
         choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)
     # false admin khong cho chinh sua diem
     is_locked = models.BooleanField(
         choices=[(0, 'UN_LOCKED'), (1, 'LOCKED')], default=False)
-    due_input_st = models.DateField(default=date.today)  # han nhap diem
-    due_input_nd = models.DateField(default=date.today)  # han nhap diem
+
+    st_due_input = models.DateField(
+        default=date.today, null=True, blank=True)  # han nhap diem
+    nd_due_input = models.DateField(
+        default=date.today, null=True, blank=True)  # han nhap diem
 
     class Meta:
         db_table = 'marks'
@@ -244,18 +271,19 @@ class Marks(models.Model):
 
 
 class MarksRegulary(models.Model):
+    CHOICES_SEMESTER = [(1, 'Học kỳ 1'), (2, 'Học kỳ 2')]
     id = models.BigAutoField(primary_key=True)
-    student = models.ForeignKey(
-        Student, on_delete=models.DO_NOTHING, related_name='marksregulary_student')
     marks_ref = models.ForeignKey(
-        Marks, on_delete=models.DO_NOTHING, related_name='marksregulary',null=True,blank=True)
-    semester = models.IntegerField(
-        null=True, default=1)  # ma hoc ky, 1 hoac 2
-    test_date = models.DateTimeField(default=timezone.now)
-    times = models.IntegerField(null=True, default=1)
+        Marks, on_delete=models.DO_NOTHING, related_name='marksregulary', null=True, blank=True)
+    semester = models.IntegerField(choices=CHOICES_SEMESTER, validators=[
+                                   MinValueValidator(1), MaxValueValidator(2)])  # ma hoc ky, 1 hoac 2
+    test_date = models.DateTimeField(
+        default=timezone.now, null=True, blank=True)
+    times = models.IntegerField(null=True, blank=True)
     point = models.DecimalField(
-        max_digits=3, decimal_places=1, default=0.0)
-    note = models.CharField(max_length=200, default='', null=True)
+        max_digits=3, decimal_places=1, null=True, blank=True)
+    note = models.CharField(default='', null=True,
+                            blank=True, max_length=200, )
     is_public = models.BooleanField(
         choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)  # show diem
     is_locked = models.BooleanField(choices=[(0, 'UN_LOCKED'), (
@@ -263,6 +291,10 @@ class MarksRegulary(models.Model):
 
     class Meta:
         db_table = 'marksregulary'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['marks_ref', 'semester', 'times'], name='unique_marksregulary')
+        ]
 
     def __str__(self):
         return str(self.point)

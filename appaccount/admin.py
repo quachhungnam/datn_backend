@@ -21,7 +21,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 from appaccount.models import User as CustomUser
 from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
-                             AcademicRecord, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
+                             LearningOutcomes, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
 # Register your models here.
@@ -246,25 +246,25 @@ class ActivitiesClassAdmin(admin.ModelAdmin):
 
 
 class SchoolYearAdmin(admin.ModelAdmin):
-    actions = ['set_academicrecord']
+    actions = ['set_LearningOutcomes']
     list_display = ['from_year', 'to_year', 'count_class']
 
     def count_class(self, SchoolYear):
         return SchoolYear.activities_class.count()
     count_class.short_description = 'Quantum class'
 
-    def set_academicrecord(self, request, queryset):
+    def set_LearningOutcomes(self, request, queryset):
         print(queryset)
         students = Student.objects.filter(is_graduate=False)
 
         for school_year in queryset:
             for student in students:
-                academic_record = AcademicRecord(
+                academic_record = LearningOutcomes(
                     student=student,
                     school_year=school_year
                 )
                 academic_record.save()
-    set_academicrecord.short_description = "Add new AcademicRecord for all Student"
+    set_LearningOutcomes.short_description = "Add new LearningOutcomes for all Student"
 
 
 class SubjectAdmin(admin.ModelAdmin):
@@ -306,22 +306,22 @@ class LectureAdmin(admin.ModelAdmin):
     add_marks_class.short_description = "Add mark for all Student of lecture"
 
 
-class AcademicRecordAdmin(admin.ModelAdmin):
+class LearningOutcomesAdmin(admin.ModelAdmin):
     list_display = ['student', 'get_fullname', 'get_course_year', 'get_class', 'school_year',
-                    'gpa_year', 'conduct_gpasemester', 'rating', ]
+                    'year_gpa', 'year_conduct', 'year_rating', ]
     list_select_related = ['student']
     ordering = ['school_year', 'student__classes', 'student', ]
 
-    def get_fullname(self, AcademicRecord):
-        return AcademicRecord.student.user.first_name+' '+AcademicRecord.student.user.last_name
+    def get_fullname(self, LearningOutcomes):
+        return LearningOutcomes.student.user.first_name+' '+LearningOutcomes.student.user.last_name
     get_fullname.short_description = 'FULL NAME'
 
-    def get_class(self, AcademicRecord):
-        return AcademicRecord.student.classes.class_name
+    def get_class(self, LearningOutcomes):
+        return LearningOutcomes.student.classes.class_name
     get_class.short_description = 'Classes'
 
-    def get_course_year(self, AcademicRecord):
-        return AcademicRecord.student.course_year
+    def get_course_year(self, LearningOutcomes):
+        return LearningOutcomes.student.course_year
     get_course_year.short_description = 'course year'
 
     pass
@@ -342,7 +342,7 @@ admin.site.register(Classes, ClassesAdmin)
 admin.site.register(Lecture, LectureAdmin)
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(ActivitiesClass, ActivitiesClassAdmin)
-admin.site.register(AcademicRecord, AcademicRecordAdmin)
+admin.site.register(LearningOutcomes, LearningOutcomesAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(SchoolYear, SchoolYearAdmin)
 admin.site.register(Marks, MarksAdmin)

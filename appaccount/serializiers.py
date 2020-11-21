@@ -9,8 +9,10 @@ from appaccount.models import User
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name',
-                  'gender', 'birthday', 'email', 'phone_number', 'address', 'is_teacher', 'password']
+        fields = ['id', 'username', 'is_teacher', 'first_name', 'last_name',
+                  'gender', 'birthday', 'email', 'phone_number', 'address',  'password']
+        read_only_fields = ('id', 'username', 'is_teacher', 'first_name', 'last_name',
+                            'gender', 'birthday')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -22,9 +24,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-    
-
-
 
 
 class ChangePasswordSerializer(serializers.Serializer):
