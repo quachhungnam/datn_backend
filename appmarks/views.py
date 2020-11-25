@@ -11,10 +11,10 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from appaccount.models import User
 from appmarks.models import (
     Department, Teacher, SchoolYear, Classes,
-    Student, LearningOutcomes, Subject, Lecture, Marks, MarksRegulary, ActivitiesClass)
+    Student, LearningOutcomes, Subject, Lecture, Marks, MarksRegulary, AdminClass)
 from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
-    StudentSerializer, LearningOutcomesSerializer, ActivitiesClassSerializer, SubjectSerializer,
+    StudentSerializer, LearningOutcomesSerializer, AdminClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
@@ -321,60 +321,60 @@ class StudentsOfLecture(generics.ListAPIView):
         return Student.objects.filter(marks_student__lecture=lecture)
 
 
-"""ActivitiesClass"""
+"""AdminClass"""
 
 
-class ActivitiesClassView(APIView):
+class AdminClassView(APIView):
 
     def get(self, request, format=None):
-        activitiesclass = ActivitiesClass.objects.all()
-        serializer = ActivitiesClassSerializer(
-            activitiesclass, many=True, context={'request': request})
+        adminclass = AdminClass.objects.all()
+        serializer = AdminClassSerializer(
+            adminclass, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = ActivitiesClassSerializer(data=request.data)
+        serializer = AdminClassSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ActivitiesClassDetail(APIView):
+class AdminClassDetail(APIView):
     def get_object(self, pk):
         try:
-            return ActivitiesClass.objects.get(pk=pk)
-        except ActivitiesClass.DoesNotExist:
+            return AdminClass.objects.get(pk=pk)
+        except AdminClass.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
-        activitiesclass = self.get_object(pk)
-        serializier = ActivitiesClassSerializer(
-            activitiesclass, context={'request': request})
+        adminclass = self.get_object(pk)
+        serializier = AdminClassSerializer(
+            adminclass, context={'request': request})
         return Response(serializier.data)
 
     def patch(self, request, pk, format=None):
-        activitiesclass = self.get_object(pk)
-        serializier = ActivitiesClassSerializer(
-            activitiesclass, data=request.data)
+        adminclass = self.get_object(pk)
+        serializier = AdminClassSerializer(
+            adminclass, data=request.data)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        activitiesclass = self.get_object(pk)
-        activitiesclass.delete()
+        adminclass = self.get_object(pk)
+        adminclass.delete()
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class ActivitiesClassTeacher(generics.ListAPIView):
-    serializer_class = ActivitiesClassSerializer
+class AdminClassTeacher(generics.ListAPIView):
+    serializer_class = AdminClassSerializer
 
     def get_queryset(self):
         teacher = self.kwargs['teacher_id']
         schoolyear = self.kwargs['schoolyear_id']
-        return ActivitiesClass.objects.filter(admin_teacher__user__id=teacher, school_year__id=schoolyear)
+        return AdminClass.objects.filter(admin_teacher__user__id=teacher, school_year__id=schoolyear)
 
 
 """Conduct"""
@@ -577,11 +577,16 @@ class MarksDetail(APIView):
 
     def patch(self, request, pk, format=None):
         marks = self.get_object(pk)
-        # print(request.data)
+        print(request.data)
+        for key in list(request.data.keys()):  # Use a list instead of a view
+            if request.data[key] == '':
+                request.data[key] = None  # Delete a key from prices
+
         serializier = MarksSerializer(marks, data=request.data)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
+        print(serializier.errors)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
@@ -634,7 +639,7 @@ class MarksOfClass(generics.ListAPIView):
     def get_queryset(self):
         class_id = self.kwargs['class_id']
         year_id = self.kwargs['year_id']
-        return Marks.objects.filter(lecture__classes=class_id,lecture__school_year=year_id).order_by('student','lecture')
+        return Marks.objects.filter(lecture__classes=class_id, lecture__school_year=year_id).order_by('student', 'lecture')
 
 
 """Diem DGTX"""
@@ -670,10 +675,14 @@ class MarksRegularyDetail(APIView):
 
     def patch(self, request, pk, format=None):
         marksregulary = self.get_object(pk)
+        for key in list(request.data.keys()):
+            if request.data[key] == '':
+                request.data[key] = None
         serializier = MarksRegularySerializer(marksregulary, data=request.data)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
+        print(serializier.errors)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):

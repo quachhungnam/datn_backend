@@ -5,6 +5,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView)
 from appaccount.views import CheckExpireToken
 from appaccount.tokenserializiers import(MyTokenObtainPairView)
+from django.conf import settings
+from django.conf.urls.static import static
 # from rest_framework.authtoken import views
 
 
@@ -18,5 +20,7 @@ urlpatterns = [
     # Api USER
     path('api/', include('appaccount.urls')),
     path('api/', include('appmarks.urls')),
+    # IMAGE
 
-]
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

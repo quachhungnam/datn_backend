@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from appmarks.models import (Department, Teacher, SchoolYear, Classes, Student,
-                             Subject, Lecture, Marks, MarksRegulary, ActivitiesClass, LearningOutcomes)
+                             Subject, Lecture, Marks, MarksRegulary, AdminClass, LearningOutcomes)
 from appaccount.serializiers import UserSerializer
 from appaccount.models import User
 from django.db import models
@@ -50,12 +50,12 @@ class ClassesSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-class ActivitiesClassSerializer(serializers.ModelSerializer):
+class AdminClassSerializer(serializers.ModelSerializer):
     classes = ClassesSerializer()
     school_year = SchoolYearSerializer()
 
     class Meta:
-        model = ActivitiesClass
+        model = AdminClass
         fields = ['id', 'classes', 'admin_teacher', 'school_year']
 
 
@@ -64,7 +64,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['user', 'is_crew', 'classes']
+        fields = ['user', 'classes', 'course_year', 'is_graduate']
 
     def create(self, validated_data):
         return Student.objects.create(
@@ -78,7 +78,7 @@ class StudentSerializer(serializers.ModelSerializer):
             phone_number=validated_data['user'].get('phone_number', ''),
             address=validated_data['user'].get('address', ''),
             classes=validated_data.get('classes'),
-            is_crew=validated_data.get('is_crew', False),
+            # is_crew=validated_data.get('is_crew', False),
         )
 
 
@@ -109,21 +109,21 @@ class LectureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = ['id', 'teacher', 'subject',
-                  'classes', 'school_year', 'status']
+                  'classes', 'school_year', 'status', 'st_due_input', 'nd_due_input', ]
 
 
 class MarksRegularySerializer(serializers.ModelSerializer):
     class Meta:
         model = MarksRegulary
-        fields = ['id', 'semester','test_date',
+        fields = ['id', 'marks_ref', 'semester', 'test_date',
                   'point', 'note', 'is_public', 'is_locked', 'times']
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'is_locked', 'test_date']
 
 
 class MarksSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()
-    lecture = LectureSerializer()
-    marksregulary = MarksRegularySerializer(many=True)
+    student = StudentSerializer(read_only=True)
+    lecture = LectureSerializer(read_only=True)
+    marksregulary = MarksRegularySerializer(read_only=True, many=True)
 
     class Meta:
         model = Marks
@@ -131,3 +131,6 @@ class MarksSerializer(serializers.ModelSerializer):
                   'mid_st_semester_point', 'end_st_semester_point', 'gpa_st_semester_point',
                   'mid_nd_semester_point', 'end_nd_semester_point', 'gpa_nd_semester_point',
                   'gpa_year_point', 'is_public', 'is_locked', 'st_due_input', 'nd_due_input', 'marksregulary']
+        read_only_fields = ['is_public', 'is_locked']
+        # extra_kwargs = {'student': {'required': False},
+        #                 'lecture': {'required': False}}

@@ -20,7 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 from appaccount.models import User as CustomUser
-from appmarks.models import (Teacher, Student, Classes, ActivitiesClass,
+from appmarks.models import (Teacher, Student, Classes, AdminClass,
                              LearningOutcomes, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
@@ -37,7 +37,7 @@ class CustomUserAdmin(BaseUserAdmin):
     model = CustomUser
     fieldsets = BaseUserAdmin.fieldsets + (
         ('More infor', {'fields': ('is_teacher',
-                                   'gender', 'birthday', 'phone_number', 'address')}),
+                                   'gender', 'birthday', 'phone_number', 'address', 'avatar')}),
     )
     list_display = ['username', 'first_name',
                     'last_name', 'email', 'is_staff', 'is_teacher']
@@ -72,7 +72,7 @@ class StudentInline(admin.StackedInline):
     can_delete = False
     verbose_name = "Student ID"
     verbose_name_plural = 'Student Information'
-    extra = 0
+    extra = 1
 
 
 class StudentUser(CustomUser):
@@ -97,7 +97,7 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name',
-                                        'gender', 'birthday', 'address', 'phone_number', 'email')}),
+                                        'gender', 'birthday', 'address', 'phone_number', 'email', 'avatar')}),
         (('Permissions'), {
             'fields': ('is_active', 'is_staff',),
         }),
@@ -106,7 +106,7 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
                     'last_name', 'birthday', 'gender',  'email', 'get_course_year', 'get_classes', ]
     search_fields = ['class_name', ]
     list_filter = ('student__course_year',
-                   'student__is_crew', 'student__is_graduate')
+                   'student__is_graduate')
     odering = ['student__is_graduate']
     list_per_page = 50
 
@@ -138,6 +138,12 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
         if change == False:
             student = Student(user=obj)
             student.save()
+        # try:
+        #     student = Student(user=obj)
+        #     student.save()
+        # except:
+        #     pass
+
         form.save_m2m()
         for formset in formsets:
             self.save_formset(request, form, formset, change=change)
@@ -164,7 +170,7 @@ class TeacherAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name',
-                                        'gender', 'birthday', 'address', 'phone_number', 'email')}),
+                                        'gender', 'birthday', 'address', 'phone_number', 'email', 'avatar')}),
         (('Permissions'), {
             'fields': ('is_active', 'is_staff',),
         }),
@@ -239,7 +245,7 @@ class ClassesAdmin(admin.ModelAdmin):
     count_student.short_description = 'Quantum Student'
 
 
-class ActivitiesClassAdmin(admin.ModelAdmin):
+class AdminClassAdmin(admin.ModelAdmin):
     pass
 
 # NAM HOC
@@ -341,7 +347,7 @@ admin.site.register(TeacherUser, TeacherAdmin)
 admin.site.register(Classes, ClassesAdmin)
 admin.site.register(Lecture, LectureAdmin)
 admin.site.register(Department, DepartmentAdmin)
-admin.site.register(ActivitiesClass, ActivitiesClassAdmin)
+admin.site.register(AdminClass, AdminClassAdmin)
 admin.site.register(LearningOutcomes, LearningOutcomesAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(SchoolYear, SchoolYearAdmin)

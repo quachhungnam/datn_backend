@@ -10,13 +10,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'is_teacher', 'first_name', 'last_name',
-                  'gender', 'birthday', 'email', 'phone_number', 'address',  'password']
+                  'gender', 'birthday', 'email', 'phone_number', 'address',  'password','avatar']
         read_only_fields = ('id', 'username', 'is_teacher', 'first_name', 'last_name',
-                            'gender', 'birthday')
+                            'gender', 'birthday','avatar')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        print('ffff')
         user = User(
             username=validated_data['username'],
             # password=validated_data['[password']d

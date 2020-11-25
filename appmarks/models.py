@@ -25,14 +25,13 @@ class TeacherManager(models.Manager):
 
 class StudentManager(models.Manager):
     def create(self, username, password, first_name, last_name, gender,
-               birthday=None, email='', phone_number='', address='', is_crew=0, classes=None, course_year=None):
+               birthday=None, email='', phone_number='', address='', classes=None, course_year=None):
         user = User(username=username, first_name=first_name, last_name=last_name, gender=gender,
                     birthday=birthday, email=email, phone_number=phone_number, address=address)
         user.set_password(password)
         user.save()
         student = Student(
             user=user,
-            is_crew=is_crew,
             classes=classes,
             course_year=course_year
         )
@@ -72,7 +71,6 @@ class SchoolYear(models.Model):  # Nam hoc
     id = models.BigAutoField(primary_key=True)
     from_year = models.IntegerField(default=date.today().year)
     to_year = models.IntegerField(default=date.today().year+1)
-    status = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'schoolyear'
@@ -98,7 +96,7 @@ class Classes(models.Model):  # Lop nao
         return str(self.class_name)+' K_'+str(self.course_year)
 
 
-class ActivitiesClass(models.Model):  # lop chu nhiem
+class AdminClass(models.Model):  # lop chu nhiem
     id = models.BigAutoField(primary_key=True)
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, related_name='activities_class')  # id lop hoc
@@ -108,10 +106,10 @@ class ActivitiesClass(models.Model):  # lop chu nhiem
         SchoolYear, on_delete=models.DO_NOTHING, related_name='activities_class')
 
     class Meta:
-        db_table = 'activitiesclass'
+        db_table = 'adminclass'
         constraints = [
             models.UniqueConstraint(
-                fields=['classes', 'admin_teacher', 'school_year'], name='unique_activitiesclass')
+                fields=['classes', 'admin_teacher', 'school_year'], name='unique_adminclass')
         ]
 
     def __str__(self):
@@ -119,14 +117,14 @@ class ActivitiesClass(models.Model):  # lop chu nhiem
 
 
 class Student(models.Model):  # Thong tin hoc sinh
-    CREW_CHOICES = [(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')]
+    # CREW_CHOICES = [(0, 'Chưa vào Đoàn'), (1, 'Đoàn viên')]
     GRADUATE_CHOICES = [(0, 'Chưa tốt nghiệp'), (1, 'Đã tốt nghiệp')]
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name='student')
     classes = models.ForeignKey(
         Classes, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='student')  # id lop hoc
-    is_crew = models.BooleanField(default=False, null=False, blank=False,
-                                  choices=CREW_CHOICES)  # Doan vien
+    # is_crew = models.BooleanField(default=False, null=False, blank=False,
+    #                               choices=CREW_CHOICES)  # Doan vien
     course_year = models.IntegerField(
         default=date.today().year)  # khoa hoc, vidu:  K2008
 
@@ -210,7 +208,10 @@ class Lecture(models.Model):  # Giao vien day nhung mon nao
     classes = models.ForeignKey(Classes, on_delete=models.DO_NOTHING)
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='lecture')
-    status = models.BooleanField(default=True)
+    st_due_input = models.DateField(
+        default=date.today, null=True, blank=True)  # han nhap diem
+    nd_due_input = models.DateField(
+        default=date.today, null=True, blank=True)  # han nhap diem
 
     class Meta:
         db_table = 'lecture'
@@ -254,10 +255,10 @@ class Marks(models.Model):
     is_locked = models.BooleanField(
         choices=[(0, 'UN_LOCKED'), (1, 'LOCKED')], default=False)
 
-    st_due_input = models.DateField(
-        default=date.today, null=True, blank=True)  # han nhap diem
-    nd_due_input = models.DateField(
-        default=date.today, null=True, blank=True)  # han nhap diem
+    # st_due_input = models.DateField(
+    #     default=date.today, null=True, blank=True)  # han nhap diem
+    # nd_due_input = models.DateField(
+    #     default=date.today, null=True, blank=True)  # han nhap diem
 
     class Meta:
         db_table = 'marks'
@@ -267,7 +268,7 @@ class Marks(models.Model):
         ]
 
     def __str__(self):
-        return str(self.student)
+        return str(self.student)+str(self.lecture)
 
 
 class MarksRegulary(models.Model):
@@ -277,23 +278,25 @@ class MarksRegulary(models.Model):
         Marks, on_delete=models.DO_NOTHING, related_name='marksregulary', null=True, blank=True)
     semester = models.IntegerField(choices=CHOICES_SEMESTER, validators=[
                                    MinValueValidator(1), MaxValueValidator(2)])  # ma hoc ky, 1 hoac 2
-    test_date = models.DateTimeField(
+    # test_date = models.DateTimeField(
+    #     default=timezone.now, null=True, blank=True)
+    input_date = models.DateTimeField(
         default=timezone.now, null=True, blank=True)
-    times = models.IntegerField(null=True, blank=True)
+    # times = models.IntegerField(null=True, blank=True)
     point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True)
     note = models.CharField(default='', null=True,
                             blank=True, max_length=200, )
-    is_public = models.BooleanField(
-        choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)  # show diem
-    is_locked = models.BooleanField(choices=[(0, 'UN_LOCKED'), (
-        1, 'LOCKED')], default=False)  # admin khong cho chinh sua
+    # is_public = models.BooleanField(
+    #     choices=[(0, 'NOT_PUBLIC'), (1, 'PUBLIC')], default=False)  # show diem
+    # is_locked = models.BooleanField(choices=[(0, 'UN_LOCKED'), (
+    #     1, 'LOCKED')], default=False)  # admin khong cho chinh sua
 
     class Meta:
         db_table = 'marksregulary'
         constraints = [
             models.UniqueConstraint(
-                fields=['marks_ref', 'semester', 'times'], name='unique_marksregulary')
+                fields=['marks_ref', 'semester'], name='unique_marksregulary')
         ]
 
     def __str__(self):
