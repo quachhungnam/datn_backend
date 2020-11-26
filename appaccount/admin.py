@@ -24,6 +24,7 @@ from appmarks.models import (Teacher, Student, Classes, AdminClass,
                              LearningOutcomes, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
+from datetime import datetime, date
 # Register your models here.
 # SET Header and Title
 admin.site.site_header = 'Management School Administration'
@@ -39,8 +40,8 @@ class CustomUserAdmin(BaseUserAdmin):
         ('More infor', {'fields': ('is_teacher',
                                    'gender', 'birthday', 'phone_number', 'address', 'avatar')}),
     )
-    list_display = ['username', 'first_name',
-                    'last_name', 'email', 'is_staff', 'is_teacher']
+    list_display = ['username', 'last_name',
+                    'first_name', 'email', 'is_staff', 'is_teacher']
     list_per_page = 50
 
     def set_is_teacher(self, request, queryset):
@@ -84,7 +85,7 @@ class StudentUser(CustomUser):
 class StudentResource(resources.ModelResource):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'first_name', 'last_name',)
+        fields = ('id', 'username', 'last_name', 'first_name',)
 
         # export_order = ()
 
@@ -102,8 +103,8 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
             'fields': ('is_active', 'is_staff',),
         }),
     )
-    list_display = ['username', 'first_name',
-                    'last_name', 'birthday', 'gender',  'email', 'get_course_year', 'get_classes', ]
+    list_display = ['username', 'last_name', 'first_name',
+                    'birthday', 'gender',  'email', 'get_course_year', 'get_classes', ]
     search_fields = ['class_name', ]
     list_filter = ('student__course_year',
                    'student__is_graduate')
@@ -175,8 +176,8 @@ class TeacherAdmin(BaseUserAdmin):
             'fields': ('is_active', 'is_staff',),
         }),
     )
-    list_display = ['username', 'first_name',
-                    'last_name', 'email', 'is_staff', 'get_department']
+    list_display = ['username',  'last_name', 'first_name',
+                    'email', 'is_staff', 'get_department']
 
     def get_department(self, CustomUser):
         return CustomUser.teacher.department
@@ -238,7 +239,48 @@ class ClassesAdmin(admin.ModelAdmin):
     search_fields = ['class_name', 'course_year', ]
     list_filter = ['course_year']
     ordering = ['course_year', 'class_name']
+    actions = ['add_result_study']
     list_per_page = 50
+
+    # def set_LearningOutcomes(self, request, queryset):
+    #     print(queryset)
+    #     students = Student.objects.filter(is_graduate=False)
+
+    #     for school_year in queryset:
+    #         for student in students:
+    #             academic_record = LearningOutcomes(
+    #                 student=student,
+    #                 school_year=school_year
+    #             )
+    #             academic_record.save()
+    # set_LearningOutcomes.short_description = "Add new LearningOutcomes for all Student"
+
+    def add_result_study(self, request, queryset):
+        current_year = date.today().year
+        schoolyear = SchoolYear.objects.filter(from_year=current_year).first()
+        for classes in queryset:
+            try:
+                print(classes)
+                print(schoolyear)
+                students = Student.objects.filter(classes=classes)
+                for student in students:
+                    learning_rs = LearningOutcomes(
+                        student=student,
+                        school_year=schoolyear
+                    )
+                    learning_rs.save()
+            except:
+                pass
+
+                # updated = queryset.update(is_teacher=True)
+                # for user in queryset:
+                #     teacher = Teacher.objects.create(user=user)
+                # self.message_user(request, ngettext(
+                #     '%d user is seted to Teacher.',
+                #     '%d users is seted to Teacher.',
+                #     updated,
+                # ) % updated, messages.SUCCESS)
+    add_result_study.short_description = "Add Result Study current Year"
 
     def count_student(self, Classes):
         return Classes.student.count()
@@ -293,7 +335,7 @@ class MarksInlineLecture(admin.StackedInline):
 
 
 class LectureAdmin(admin.ModelAdmin):
-    inlines = [MarksInlineLecture]
+    # inlines = [MarksInlineLecture]
     list_display = ['teacher', 'subject', 'classes', 'school_year']
     actions = ['add_marks_class']
 
@@ -319,7 +361,7 @@ class LearningOutcomesAdmin(admin.ModelAdmin):
     ordering = ['school_year', 'student__classes', 'student', ]
 
     def get_fullname(self, LearningOutcomes):
-        return LearningOutcomes.student.user.first_name+' '+LearningOutcomes.student.user.last_name
+        return LearningOutcomes.student.user.last_name+' '+LearningOutcomes.student.user.first_name
     get_fullname.short_description = 'FULL NAME'
 
     def get_class(self, LearningOutcomes):

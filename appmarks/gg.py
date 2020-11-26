@@ -5,19 +5,25 @@
 # # print(date.today)
 
 
-def tinhtienluong(**kwargs):
-    # print(kwargs['luongthang'])
-    # for i in kwargs.items():
-    for k in kwargs.items():
-        print(k)
-        # user.k=v
-        # print(k,)
-    # print()
+# def tinhtienluong(**kwargs):
+#     # print(kwargs['luongthang'])
+#     # for i in kwargs.items():
+#     for k in kwargs.items():
+#         print(k)
+#         # user.k=v
+#         # print(k,)
+#     # print()
 
 
-luong = {'luongthang': 10000000, 'luongthuong': 10000000}
-luong2 = dict(luongthang=10000000, luongthuong=1000000)
-tinhtienluong(**luong)
+# luong = {'luongthang': 10000000, 'luongthuong': 10000000}
+# luong2 = dict(luongthang=10000000, luongthuong=1000000)
+# tinhtienluong(**luong)
+
+
+full_name = 'Quách/Hùng/Nam'
+
+word = full_name.split('/', 1)
+print(word)
 
 
 # aa={"name":"Name","tuoi":"19"}

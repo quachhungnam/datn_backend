@@ -24,7 +24,7 @@ class TeacherManager(models.Manager):
 
 
 class StudentManager(models.Manager):
-    def create(self, username, password, first_name, last_name, gender,
+    def create(self, username, password, first_name, last_name, gender=None,
                birthday=None, email='', phone_number='', address='', classes=None, course_year=None):
         user = User(username=username, first_name=first_name, last_name=last_name, gender=gender,
                     birthday=birthday, email=email, phone_number=phone_number, address=address)

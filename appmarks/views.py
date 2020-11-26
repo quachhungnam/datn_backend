@@ -20,6 +20,7 @@ from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 import pandas as pd
 from pandas import ExcelFile
+from datetime import datetime, date
 
 # Create your views here.
 
@@ -736,35 +737,32 @@ class ImportData(APIView):
             file_data_student = request.FILES["data_student"]
             df = pd.read_excel(file_data_student,
                                sheet_name=0, index_col=0)
-
             for row in df.itertuples():
-                classes = Classes.objects.filter(
-                    course_year=row[4], class_name__iexact=row[5]).first()
-                if classes is None:
-                    classes = Classes(
-                        class_name=row[5]
-                    )
+                try:
+                    current_year = date.today().year
+                    classes = Classes.objects.filter(
+                        course_year=current_year, class_name__iexact=row[4]).first()
+                    if classes is None:
+                        classes = Classes(
+                            class_name=row[4]
+                        )
                     classes.save()
-                print(classes)
-                student = Student.objects.create(
-                    username=row[0],
-                    password=str(row[0]),
-                    first_name=row[1],
-                    last_name=row[2],
-                    gender=row[3],
-                    course_year=row[4],
-                    # birthday=row[''],
-                    # email=validated_data['user'].get('email', ''),
-                    # phone_number=validated_data['user'].get(
-                    #     'phone_number', ''),
-                    # address=validated_data['user'].get('address', ''),
-                    classes=classes,
-                    # is_crew=validated_data.get('is_crew', False),
-                )
-                print('tao tai khoan thanh cong')
+                    # them hoc sinh
+                    full_name = row[2].split(' ', 1)
+                    full_birthday = row[3]
 
-                # print(df.iloc[0])
-                # print(df.iloc[0][0])
+                    student = Student.objects.create(
+                        username=row[1],
+                        password=str(row[1]),
+                        last_name=full_name[0],  # ho
+                        first_name=full_name[1],  # ten dem va ten
+                        course_year=current_year,
+                        birthday=full_birthday,
+                        classes=classes,
+                    )
+                except:
+                    print('error')
+                    pass
 
         # print(reader)
         # Create Hero objects from passed in data

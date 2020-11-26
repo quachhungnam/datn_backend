@@ -38,7 +38,7 @@ class TeacherSerializer(serializers.ModelSerializer):
 class SchoolYearSerializer(serializers.ModelSerializer):
     class Meta:
         model = SchoolYear
-        fields = ['id', 'from_year', 'to_year', 'status']
+        fields = ['id', 'from_year', 'to_year']
         read_only_fields = ['id']
 
 
@@ -61,10 +61,12 @@ class AdminClassSerializer(serializers.ModelSerializer):
 
 class StudentSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+    classes = ClassesSerializer(read_only=True)
 
     class Meta:
         model = Student
         fields = ['user', 'classes', 'course_year', 'is_graduate']
+        read_only_fields = ['course_year', 'is_graduate']
 
     def create(self, validated_data):
         return Student.objects.create(
@@ -109,7 +111,7 @@ class LectureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = ['id', 'teacher', 'subject',
-                  'classes', 'school_year', 'status', 'st_due_input', 'nd_due_input', ]
+                  'classes', 'school_year', 'st_due_input', 'nd_due_input', ]
 
 
 class MarksRegularySerializer(serializers.ModelSerializer):
