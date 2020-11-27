@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from appmarks.models import (Department, Teacher, SchoolYear, Classes, Student,
                              Subject, Lecture, Marks, MarksRegulary, AdminClass, LearningOutcomes)
-from appaccount.serializiers import UserSerializer
+from appaccount.serializiers import (UserSerializer, UserSerializerForMarks)
 from appaccount.models import User
 from django.db import models
 
@@ -90,16 +90,13 @@ class LearningOutcomesSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningOutcomes
         fields = ['id', 'student', 'school_year',
-                  'st_semester_gpa', 'nd_semester_gpa', 'year_gpa',
-                  'st_semester_conduct', 'nd_semester_conduct', 'year_conduct',
-                  'st_semester_rating', 'nd_semester_rating', 'year_rating'
-                  ]
+                  'st_semester_conduct', 'nd_semester_conduct', ]
 
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
-        fields = ['id', 'subject_name', 'grades', 'descriptions']
+        fields = ['subject_name']
 
 
 class LectureSerializer(serializers.ModelSerializer):
@@ -117,9 +114,9 @@ class LectureSerializer(serializers.ModelSerializer):
 class MarksRegularySerializer(serializers.ModelSerializer):
     class Meta:
         model = MarksRegulary
-        fields = ['id', 'marks_ref', 'semester', 'test_date',
-                  'point', 'note', 'is_public', 'is_locked', 'times']
-        read_only_fields = ['id', 'is_locked', 'test_date']
+        fields = ['id', 'marks_ref', 'semester', 'input_date',
+                  'point', 'note']
+        read_only_fields = ['id', ]
 
 
 class MarksSerializer(serializers.ModelSerializer):
@@ -130,9 +127,64 @@ class MarksSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marks
         fields = ['id', 'student', 'lecture',
-                  'mid_st_semester_point', 'end_st_semester_point', 'gpa_st_semester_point',
-                  'mid_nd_semester_point', 'end_nd_semester_point', 'gpa_nd_semester_point',
-                  'gpa_year_point', 'is_public', 'is_locked', 'st_due_input', 'nd_due_input', 'marksregulary']
+                  'mid_st_semester_point', 'end_st_semester_point',
+                  'mid_nd_semester_point', 'end_nd_semester_point',
+                  'is_public', 'is_locked', 'marksregulary']
         read_only_fields = ['is_public', 'is_locked']
         # extra_kwargs = {'student': {'required': False},
         #                 'lecture': {'required': False}}
+
+
+# Toan bo diem cua 1 hoc sinh
+class MarksRegSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarksRegulary
+        fields = ['id', 'marks_ref', 'semester', 'point']
+        read_only_fields = ['id', ]
+
+
+class LectureForStudentSerializer(serializers.ModelSerializer):
+    school_year = SchoolYearSerializer()
+    subject = SubjectSerializer()
+
+    class Meta:
+        model = Lecture
+        fields = ['id', 'subject',
+                  'classes', 'school_year']
+        read_only_fields = ['id', ]
+
+
+class MarksSerializerStudent(serializers.ModelSerializer):
+    marksregulary = MarksRegSerializer(read_only=True, many=True)
+    lecture = LectureForStudentSerializer(read_only=True)
+
+    class Meta:
+        model = Marks
+        fields = ['id', 'lecture',
+                  'mid_st_semester_point', 'end_st_semester_point',
+                  'mid_nd_semester_point', 'end_nd_semester_point',
+                   'marksregulary']
+        # read_only_fields = ['is_public', 'is_locked']
+
+# TOAN BO DIEM CUA MOT MON HOC, 1 LOP
+
+
+class StudentSerializerForMarks(serializers.ModelSerializer):
+    user = UserSerializerForMarks(read_only=True)
+    # classes = ClassesSerializer(read_only=True)
+
+    class Meta:
+        model = Student
+        fields = ['user', ]
+
+
+class MarksSerializerClasses(serializers.ModelSerializer):
+    marksregulary = MarksRegSerializer(read_only=True, many=True)
+    student = StudentSerializerForMarks(read_only=True)
+
+    class Meta:
+        model = Marks
+        fields = ['id', 'student',
+                  'mid_st_semester_point', 'end_st_semester_point',
+                  'mid_nd_semester_point', 'end_nd_semester_point',
+                  'marksregulary']

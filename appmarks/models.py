@@ -152,27 +152,27 @@ class LearningOutcomes(models.Model):
     student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='learningoutcomes')
-    st_semester_gpa = models.DecimalField(
-        max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk1
-    nd_semester_gpa = models.DecimalField(
-        max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk2
-    year_gpa = models.DecimalField(
-        max_digits=3, decimal_places=1, default=0.0)  # diem trung binh ca nam hoc
+    # st_semester_gpa = models.DecimalField(
+    #     max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk1
+    # nd_semester_gpa = models.DecimalField(
+    #     max_digits=3, decimal_places=1, default=0.0)  # diem trung binh tat ca mon hk2
+    # year_gpa = models.DecimalField(
+    #     max_digits=3, decimal_places=1, default=0.0)  # diem trung binh ca nam hoc
 
     # Xep loai hanh kiem 1,2,3,4
     st_semester_conduct = models.IntegerField(
         null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 1
     nd_semester_conduct = models.IntegerField(
         null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 2
-    year_conduct = models.IntegerField(
-        null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem ca nam
+    # year_conduct = models.IntegerField(
+    #     null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem ca nam
 
-    st_semester_rating = models.IntegerField(
-        null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 1
-    nd_semester_rating = models.IntegerField(
-        null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 2
-    year_rating = models.IntegerField(
-        null=True, blank=True, choices=RATING_CHOICES)  # xep loai ca nam
+    # st_semester_rating = models.IntegerField(
+    #     null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 1
+    # nd_semester_rating = models.IntegerField(
+    #     null=True, blank=True, choices=RATING_CHOICES)  # xep loai hoc ky 2
+    # year_rating = models.IntegerField(
+    #     null=True, blank=True, choices=RATING_CHOICES)  # xep loai ca nam
 
     class Meta:
         db_table = 'learningoutcomes'
@@ -235,18 +235,18 @@ class Marks(models.Model):
         max_digits=3, decimal_places=1, null=True, blank=True)  # diem giua ky 1 mon hoc
     end_st_semester_point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True)  # diem cuoi ky 1 mon hoc
-    gpa_st_semester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 1 mon hoc
+    # gpa_st_semester_point = models.DecimalField(
+    #     max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 1 mon hoc
 
     mid_nd_semester_point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True)  # diem giua ky 2 mon hoc
     end_nd_semester_point = models.DecimalField(
         max_digits=3, decimal_places=1, null=True, blank=True)  # diem cuoi ky 2 mon hoc
-    gpa_nd_semester_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 2 mon hoc
+    # gpa_nd_semester_point = models.DecimalField(
+    #     max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh ky 2 mon hoc
 
-    gpa_year_point = models.DecimalField(
-        max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh mon ca nam
+    # gpa_year_point = models.DecimalField(
+    #     max_digits=3, decimal_places=1, null=True, blank=True)  # diem trung binh mon ca nam
 
     # true =cho hoc sinh xem y
     is_public = models.BooleanField(
@@ -268,7 +268,7 @@ class Marks(models.Model):
         ]
 
     def __str__(self):
-        return str(self.student)+str(self.lecture)
+        return str(self.student)+' - '+str(self.lecture.subject.subject_name)
 
 
 class MarksRegulary(models.Model):
@@ -294,10 +294,10 @@ class MarksRegulary(models.Model):
 
     class Meta:
         db_table = 'marksregulary'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['marks_ref', 'semester'], name='unique_marksregulary')
-        ]
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['marks_ref', 'semester'], name='unique_marksregulary')
+        # ]
 
     def __str__(self):
         return str(self.point)

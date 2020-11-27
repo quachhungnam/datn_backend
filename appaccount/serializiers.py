@@ -10,19 +10,24 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'is_teacher', 'first_name', 'last_name',
-                  'gender', 'birthday', 'email', 'phone_number', 'address',  'password','avatar']
+                  'gender', 'birthday', 'email', 'phone_number', 'address',  'password', 'avatar']
         read_only_fields = ('id', 'username', 'is_teacher', 'first_name', 'last_name',
-                            'gender', 'birthday','avatar')
+                            'gender', 'birthday', 'avatar')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(
             username=validated_data['username'],
-            # password=validated_data['[password']d
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+
+class UserSerializerForMarks(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username',  'first_name', 'last_name', ]
 
 
 class ChangePasswordSerializer(serializers.Serializer):

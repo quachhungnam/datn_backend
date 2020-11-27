@@ -25,6 +25,7 @@ from appmarks.models import (Teacher, Student, Classes, AdminClass,
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
 from datetime import datetime, date
+import decimal
 # Register your models here.
 # SET Header and Title
 admin.site.site_header = 'Management School Administration'
@@ -105,7 +106,7 @@ class StudentAdmin(ImportExportActionModelAdmin, BaseUserAdmin):
     )
     list_display = ['username', 'last_name', 'first_name',
                     'birthday', 'gender',  'email', 'get_course_year', 'get_classes', ]
-    search_fields = ['class_name', ]
+    # search_fields = ['student__classes__class_name', ]
     list_filter = ('student__course_year',
                    'student__is_graduate')
     odering = ['student__is_graduate']
@@ -239,7 +240,7 @@ class ClassesAdmin(admin.ModelAdmin):
     search_fields = ['class_name', 'course_year', ]
     list_filter = ['course_year']
     ordering = ['course_year', 'class_name']
-    actions = ['add_result_study']
+    actions = ['add_result_study', 'set_is_graduate']
     list_per_page = 50
 
     # def set_LearningOutcomes(self, request, queryset):
@@ -255,14 +256,23 @@ class ClassesAdmin(admin.ModelAdmin):
     #             academic_record.save()
     # set_LearningOutcomes.short_description = "Add new LearningOutcomes for all Student"
 
+    def set_is_graduate(self, request, queryset):
+        for classes in queryset:
+            try:
+                students = Student.objects.filter(
+                    is_graduate=False, classes=classes)
+                students.update(is_graduate=True)
+            except:
+                pass
+    set_is_graduate.short_description = "Set Student Is Graduate"
+
     def add_result_study(self, request, queryset):
         current_year = date.today().year
         schoolyear = SchoolYear.objects.filter(from_year=current_year).first()
         for classes in queryset:
             try:
-                print(classes)
-                print(schoolyear)
-                students = Student.objects.filter(classes=classes)
+                students = Student.objects.filter(
+                    is_graduate=False, classes=classes)
                 for student in students:
                     learning_rs = LearningOutcomes(
                         student=student,
@@ -288,7 +298,13 @@ class ClassesAdmin(admin.ModelAdmin):
 
 
 class AdminClassAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['admin_teacher', 'classes', 'school_year', ]
+    search_fields = ['admin_teacher__user__username',
+                     'admin_teacher__user__last_name', 'admin_teacher__user__first_name', ]
+    list_filter = ['school_year__from_year', 'classes__course_year']
+    ordering = ['-classes__course_year', ]
+    list_per_page = 50
+
 
 # NAM HOC
 
@@ -302,7 +318,7 @@ class SchoolYearAdmin(admin.ModelAdmin):
     count_class.short_description = 'Quantum class'
 
     def set_LearningOutcomes(self, request, queryset):
-        print(queryset)
+        # print(queryset)
         students = Student.objects.filter(is_graduate=False)
 
         for school_year in queryset:
@@ -336,12 +352,33 @@ class MarksInlineLecture(admin.StackedInline):
 
 class LectureAdmin(admin.ModelAdmin):
     # inlines = [MarksInlineLecture]
-    list_display = ['teacher', 'subject', 'classes', 'school_year']
+    list_display = ['teacher', 'get_fullname',
+                    'subject', 'classes', 'school_year', ]
     actions = ['add_marks_class']
+    list_filter = ['school_year__from_year']
+    search_fields = ['teacher__user__username',
+                     'teacher__user__last_name', 'teacher__user__first_name', 'classes__class_name']
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        students = Student.objects.filter(
+            is_graduate=False, classes=obj.classes)
+        for student in students:
+            try:
+                marks = Marks(
+                    student=student,
+                    lecture=obj
+                )
+                marks.save()
+            except:
+                pass
+
+    def get_fullname(self, obj):
+        return obj.teacher.user.last_name+obj.teacher.user.first_name
+    get_fullname.short_description = 'FULL NAME'
 
     def add_marks_class(self, request, queryset):
         for lecture in queryset:
-            print(lecture.classes)
             students = Student.objects.filter(
                 is_graduate=False, classes=lecture.classes)
 
@@ -355,9 +392,12 @@ class LectureAdmin(admin.ModelAdmin):
 
 
 class LearningOutcomesAdmin(admin.ModelAdmin):
-    list_display = ['student', 'get_fullname', 'get_course_year', 'get_class', 'school_year',
-                    'year_gpa', 'year_conduct', 'year_rating', ]
+    list_display = ['student', 'get_fullname',
+                    'get_course_year', 'get_class', 'school_year', ]
     list_select_related = ['student']
+    search_fields = ['student__user__username',
+                     'student__user__first_name', 'student__user__last_name', ]
+    list_filter = ['school_year']
     ordering = ['school_year', 'student__classes', 'student', ]
 
     def get_fullname(self, LearningOutcomes):
@@ -372,15 +412,69 @@ class LearningOutcomesAdmin(admin.ModelAdmin):
         return LearningOutcomes.student.course_year
     get_course_year.short_description = 'course year'
 
-    pass
+
+class MarksRegInline(admin.StackedInline):
+    model = MarksRegulary
+    can_delete = False
+    verbose_name = "MarksRegulary ID"
+    verbose_name_plural = 'List MarksRegulary'
+    extra = 0
 
 
 class MarksAdmin(admin.ModelAdmin):
-    pass
+    inlines = [MarksRegInline]
+    list_display = ['student', 'get_fullname',
+                    'get_class', 'lecture', ]
+    search_fields = ['student__user__username',
+                     'student__user__first_name',
+                     'student__user__last_name',
+                     'lecture__subject__subject_name',
+                     'lecture__classes__class_name',
+                     'lecture__school_year__from_year'
+                     ]
+    list_filter = ['lecture__school_year__from_year']
+    ordering = ['lecture', 'student']
+    list_per_page = 50
+
+    def get_fullname(self, obj):
+        return obj.student.user.last_name+' '+obj.student.user.first_name
+    get_fullname.short_description = 'FULL NAME'
+
+    # def get_tb_hk1(self, obj):
+    #     rs = obj.marksregulary.filter(semester=1)
+    #     dgtx = decimal.Decimal(sum(c.point for c in rs))
+    #     if obj.mid_st_semester_point != None and obj.end_st_semester_point != None:
+    #         tb1 = ((obj.mid_st_semester_point*2 +
+    #                 obj.end_st_semester_point*3+dgtx)/(5+len(rs)))
+    #         return tb1
+    #     return ""
+    # get_tb_hk1.short_description = 'FirstSemester'
+
+    # def get_tb_hk2(self, obj):
+    #     rs = obj.marksregulary.filter(semester=2)
+    #     dgtx = decimal.Decimal(sum(c.point for c in rs))
+    #     if obj.mid_nd_semester_point != None and obj.end_nd_semester_point != None:
+    #         tb1 = ((obj.mid_nd_semester_point*2 +
+    #                 obj.end_nd_semester_point*3+dgtx)/(5+len(rs)))
+    #         return tb1
+    #     return ""
+    # get_tb_hk2.short_description = 'SecondSemester'
+
+    def get_class(self, Marks):
+        return Marks.lecture.classes.class_name + ' - ' + str(Marks.lecture.classes.course_year)
+    get_class.short_description = 'Classes'
 
 
 class MarksRegularyAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['marks_ref', 'get_fullname', 'semester', 'point']
+    search_fields = ['marks_ref__student__username',
+                     'marks_ref__student__last_name', 'marks_ref__student__first_name']
+    list_filter = ['semester']
+
+    def get_fullname(self, obj):
+        return obj.marks_ref.student.user.last_name+' '+obj.marks_ref.student.user.first_name
+    get_fullname.short_description = 'FULL NAME'
+    # actions = []
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

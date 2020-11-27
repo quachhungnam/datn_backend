@@ -18,12 +18,19 @@
 # luong = {'luongthang': 10000000, 'luongthuong': 10000000}
 # luong2 = dict(luongthang=10000000, luongthuong=1000000)
 # tinhtienluong(**luong)
+import decimal
+a=decimal.Decimal(5.5)
+b=4
+print(type(a))
+print(type(b))
+print(a/b)
 
 
-full_name = 'Quách/Hùng/Nam'
 
-word = full_name.split('/', 1)
-print(word)
+# full_name = 'Quách/Hùng/Nam'
+
+# word = full_name.split('/', 1)
+# print(word)
 
 
 # aa={"name":"Name","tuoi":"19"}

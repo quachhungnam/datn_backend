@@ -15,7 +15,8 @@ from appmarks.models import (
 from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
     StudentSerializer, LearningOutcomesSerializer, AdminClassSerializer, SubjectSerializer,
-    ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer)
+    ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer,
+    MarksSerializerStudent, MarksSerializerClasses)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 import pandas as pd
@@ -432,7 +433,7 @@ class StudentRecord(generics.ListAPIView):
         # teacher = self.kwargs['teacher']
         # schoolyear = self.kwargs['schoolyear']
         studentId = self.kwargs['studentId']
-        return LearningOutcomes.objects.filter(student=studentId)
+        return LearningOutcomes.objects.filter(student=studentId).order_by('-school_year')
 
 # class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
 #     serializer_class = ConductSerializer
@@ -540,8 +541,8 @@ class LectureList(generics.ListAPIView):
         # teacher = self.request.user
         teacher = self.kwargs['teacher']
         schoolyear = self.kwargs['schoolyear']
-        print(teacher)
-        print(schoolyear)
+        # print(teacher)
+        # print(schoolyear)
         return Lecture.objects.filter(teacher__user__id=teacher, school_year__id=schoolyear)
 
 
@@ -578,7 +579,7 @@ class MarksDetail(APIView):
 
     def patch(self, request, pk, format=None):
         marks = self.get_object(pk)
-        print(request.data)
+        # print(request.data)
         for key in list(request.data.keys()):  # Use a list instead of a view
             if request.data[key] == '':
                 request.data[key] = None  # Delete a key from prices
@@ -587,7 +588,7 @@ class MarksDetail(APIView):
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
-        print(serializier.errors)
+        # print(serializier.errors)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
@@ -598,7 +599,7 @@ class MarksDetail(APIView):
 
 # toan bo diem cua 1 hoc sinh trong 3 nam hoc
 class MarkStudent(generics.ListAPIView):
-    serializer_class = MarksSerializer
+    serializer_class = MarksSerializerStudent
 
     def get_queryset(self):
         studentId = self.kwargs['studentId']
@@ -626,11 +627,11 @@ class MarksByYear(generics.ListAPIView):
 
 # diem 1 mon hoc cua 1 lop hoc
 class MarksOfLecture(generics.ListAPIView):
-    serializer_class = MarksSerializer
+    serializer_class = MarksSerializerClasses
 
     def get_queryset(self):
         lecture_id = self.kwargs['lecture_id']
-        return Marks.objects.filter(lecture__id=lecture_id)
+        return Marks.objects.filter(lecture__id=lecture_id).order_by('student__user__first_name')
 
 
 # toan bo diem cua 1 lop' hoc trong 1 nam hoc
@@ -683,7 +684,7 @@ class MarksRegularyDetail(APIView):
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
-        print(serializier.errors)
+        # print(serializier.errors)
         return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
@@ -701,7 +702,7 @@ class AddStudent(APIView):
     parser_class = (MultiPartParser,)
 
     def post(self, request, format=None):
-        print(request.data)
+        # print(request.data)
         try:
             # print(request.data['fileanh'])
             # print(request.data)
@@ -711,7 +712,7 @@ class AddStudent(APIView):
             df = pd.read_excel(
                 request.FILES['fileanh'], sheet_name=0, index_col=0)
             # xong roi luu vao DB
-            print(df)
+            # print(df)
 
             return Response({"success": 'success'}, status=status.HTTP_201_CREATED)
 
@@ -751,7 +752,7 @@ class ImportData(APIView):
                     full_name = row[2].split(' ', 1)
                     full_birthday = row[3]
 
-                    student = Student.objects.create(
+                    Student.objects.create(
                         username=row[1],
                         password=str(row[1]),
                         last_name=full_name[0],  # ho
@@ -760,8 +761,10 @@ class ImportData(APIView):
                         birthday=full_birthday,
                         classes=classes,
                     )
+                    print('success')
                 except:
-                    print('error')
+                    print('fail create')
+                    # print('error')
                     pass
 
         # print(reader)
