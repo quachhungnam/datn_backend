@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/', include('appaccount.urls')),
     path('api/', include('appmarks.urls')),
     # IMAGE
-
-
+    # url ( r '^ ckeditor /' ,  include ( 'ckeditor_uploader.urls' )),
+    path('^ckeditor/', include('ckeditor_uploader.urls'))
+    # url(r'^ckeditor/', include('ckeditor_uploader.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

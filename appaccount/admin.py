@@ -21,7 +21,8 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 from appaccount.models import User as CustomUser
 from appmarks.models import (Teacher, Student, Classes, AdminClass,
-                             LearningOutcomes, Department, Subject, SchoolYear, Marks, MarksRegulary, Lecture)
+                             LearningOutcomes, Department, Subject, SchoolYear, 
+                             Marks, MarksRegulary, Lecture,Notice)
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
 from datetime import datetime, date
@@ -32,6 +33,12 @@ admin.site.site_header = 'Management School Administration'
 admin.site.site_title = 'Management School'
 admin.site.index_title = 'Management School'
 # USER
+
+
+class ClassesProxy(Classes):
+    class Meta:
+        proxy = True
+        verbose_name = "Lecture_Classes"
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -231,6 +238,7 @@ class StudentInlineClass(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'List Student'
     verbose_name = "Student ID"
+    classes = ['collapse']
     extra = 0
 
 
@@ -361,17 +369,18 @@ class LectureAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        students = Student.objects.filter(
-            is_graduate=False, classes=obj.classes)
-        for student in students:
-            try:
-                marks = Marks(
-                    student=student,
-                    lecture=obj
-                )
-                marks.save()
-            except:
-                pass
+        if change==False:
+            students = Student.objects.filter(
+                is_graduate=False, classes=obj.classes)
+            for student in students:
+                try:
+                    marks = Marks(
+                        student=student,
+                        lecture=obj
+                    )
+                    marks.save()
+                except:
+                    pass
 
     def get_fullname(self, obj):
         return obj.teacher.user.last_name+obj.teacher.user.first_name
@@ -477,10 +486,67 @@ class MarksRegularyAdmin(admin.ModelAdmin):
     # actions = []
 
 
+class LectureInline(admin.StackedInline):
+    model = Lecture
+    can_delete = False
+    verbose_name = "Lecture ID"
+    verbose_name_plural = 'List Lecture'
+    extra = 0
+
+    # def has_change_permission(self, request, obj=None):
+    #     return False
+
+    # def has_add_permission(self, request, obj=None):
+    #     return False
+
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
+
+    # def get_readonly_fields(self, request, obj=None):
+    #     return list(super().get_fields(request, obj))
+
+
+class ClasesProxyAdmin(admin.ModelAdmin):
+    inlines = [LectureInline]
+    list_display = ['class_name', 'course_year', ]
+    search_fields = ['class_name', 'course_year', ]
+    list_filter = ['course_year']
+    ordering = ['course_year', 'class_name']
+    # actions = ['add_result_study', 'set_is_graduate']
+    list_per_page = 50
+
+    # def save_related(self,request, form, formsets, change):
+    #     obj = form.instance #class day roi
+    #     if change==True:
+    #         # them lop va
+
+    # def save_related(self, request, form, formsets, change):
+    #     # obj = form.instance
+    #     print(request)
+    #     print(form)
+    #     print(formsets)
+    #     if change == True:
+    #         print('dang change')
+    #     if change == False:
+    #         print('them moi a')
+    #     #     teacher.save()
+    #     # form.save_m2m()
+    #     # for formset in formsets:
+    #     #     self.save_formset(request, form, formset, change=change)
+
+    pass
+
+
+class NoticeAdmin(admin.ModelAdmin):
+    list_display=['post_date','title']
+    ordering=['post_date','title']
+    pass
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(StudentUser, StudentAdmin)
 admin.site.register(TeacherUser, TeacherAdmin)
 admin.site.register(Classes, ClassesAdmin)
+admin.site.register(ClassesProxy, ClasesProxyAdmin)
 admin.site.register(Lecture, LectureAdmin)
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(AdminClass, AdminClassAdmin)
@@ -489,3 +555,4 @@ admin.site.register(Subject, SubjectAdmin)
 admin.site.register(SchoolYear, SchoolYearAdmin)
 admin.site.register(Marks, MarksAdmin)
 admin.site.register(MarksRegulary, MarksRegularyAdmin)
+admin.site.register(Notice,NoticeAdmin)

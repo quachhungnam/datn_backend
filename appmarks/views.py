@@ -11,12 +11,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from appaccount.models import User
 from appmarks.models import (
     Department, Teacher, SchoolYear, Classes,
-    Student, LearningOutcomes, Subject, Lecture, Marks, MarksRegulary, AdminClass)
+    Student, LearningOutcomes, Subject, Lecture,
+    Marks, MarksRegulary, AdminClass, Notice)
 from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
     StudentSerializer, LearningOutcomesSerializer, AdminClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer,
-    MarksSerializerStudent, MarksSerializerClasses)
+    MarksSerializerStudent, MarksSerializerClasses, NoticeSerializer)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 import pandas as pd
@@ -617,7 +618,7 @@ class MarkStudent(generics.ListAPIView):
 
 # diem cua 1 hoc sinh trong 1 nam hoc
 class MarksByYear(generics.ListAPIView):
-    serializer_class = MarksSerializer
+    serializer_class = MarksSerializerStudent
 
     def get_queryset(self):
         studentId = self.kwargs['studentId']
@@ -691,6 +692,55 @@ class MarksRegularyDetail(APIView):
         marksregulary = self.get_object(pk)
         marksregulary.delete()
         return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+"""Notice"""
+
+
+class NoticeView(APIView):
+
+    def get(self, request, format=None):
+        notices = Notice.objects.all().order_by('-post_date', 'title')
+        serializer = NoticeSerializer(
+            notices, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    # def post(self, request, format=None):
+    #     serializer = NoticeSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NoticeDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Notice.objects.get(pk=pk)
+        except Notice.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        marksregulary = self.get_object(pk)
+        serializier = NoticeSerializer(marksregulary)
+        return Response(serializier.data)
+
+    # def patch(self, request, pk, format=None):
+    #     marksregulary = self.get_object(pk)
+    #     for key in list(request.data.keys()):
+    #         if request.data[key] == '':
+    #             request.data[key] = None
+    #     serializier = NoticeSerializer(marksregulary, data=request.data)
+    #     if serializier.is_valid():
+    #         serializier.save()
+    #         return Response(serializier.data)
+    #     # print(serializier.errors)
+    #     return Response(serializier.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def delete(self, request, pk, format=None):
+    #     marksregulary = self.get_object(pk)
+    #     marksregulary.delete()
+    #     return Response({"detail": "delete successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 """Teacher"""

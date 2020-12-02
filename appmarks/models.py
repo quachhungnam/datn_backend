@@ -4,6 +4,8 @@ from appaccount.models import User
 from datetime import datetime, date
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from ckeditor.fields import RichTextField
+
 # Create your models here.
 
 
@@ -301,3 +303,18 @@ class MarksRegulary(models.Model):
 
     def __str__(self):
         return str(self.point)
+
+
+class Notice(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    title = models.CharField(
+        default='', null=True, blank=True, max_length=200)
+    post_date = models.DateTimeField(
+        default=timezone.now, null=True, blank=True)
+    content = RichTextField()
+
+    class Meta:
+        db_table = 'notice'
+
+    def __str__(self):
+        return self.title

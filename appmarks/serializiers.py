@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from appmarks.models import (Department, Teacher, SchoolYear, Classes, Student,
-                             Subject, Lecture, Marks, MarksRegulary, AdminClass, LearningOutcomes)
+                             Subject, Lecture, Marks, MarksRegulary, 
+                             AdminClass, LearningOutcomes,
+                             Notice)
 from appaccount.serializiers import (UserSerializer, UserSerializerForMarks)
 from appaccount.models import User
 from django.db import models
@@ -188,3 +190,10 @@ class MarksSerializerClasses(serializers.ModelSerializer):
                   'mid_st_semester_point', 'end_st_semester_point',
                   'mid_nd_semester_point', 'end_nd_semester_point',
                   'marksregulary']
+
+#Notice
+class NoticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notice
+        fields = ['id', 'title','content','post_date']
+        read_only_fields = ['id', ]

@@ -20,7 +20,9 @@ from appmarks.views import (
     StudentsOfLecture,
     MarksOfLecture,
     MarksByYear,
-    MarksOfClass
+    MarksOfClass,
+    NoticeView,
+    NoticeDetail,
 )
 app_name = 'appmarks'
 urlpatterns = [
@@ -87,6 +89,10 @@ urlpatterns = [
     path('marksregularys/', MarksRegularyView.as_view()),
     path('marksregularys/<int:pk>/', MarksRegularyDetail.as_view(),
          name='marksregulary-detail'),
+
+    path('notices/', NoticeView.as_view()),
+    path('notices/<int:pk>/', NoticeDetail.as_view(),
+         name='notice-detail'),
 
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
