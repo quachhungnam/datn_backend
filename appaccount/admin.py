@@ -21,8 +21,8 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 from appaccount.models import User as CustomUser
 from appmarks.models import (Teacher, Student, Classes, AdminClass,
-                             LearningOutcomes, Department, Subject, SchoolYear, 
-                             Marks, MarksRegulary, Lecture,Notice)
+                             LearningOutcomes, Department, Subject, SchoolYear,
+                             Marks, MarksRegulary, Lecture, Notice)
 from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
 from datetime import datetime, date
@@ -369,7 +369,7 @@ class LectureAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        if change==False:
+        if change == False:
             students = Student.objects.filter(
                 is_graduate=False, classes=obj.classes)
             for student in students:
@@ -383,7 +383,7 @@ class LectureAdmin(admin.ModelAdmin):
                     pass
 
     def get_fullname(self, obj):
-        return obj.teacher.user.last_name+obj.teacher.user.first_name
+        return obj.teacher.user.last_name+' '+obj.teacher.user.first_name
     get_fullname.short_description = 'FULL NAME'
 
     def add_marks_class(self, request, queryset):
@@ -538,9 +538,10 @@ class ClasesProxyAdmin(admin.ModelAdmin):
 
 
 class NoticeAdmin(admin.ModelAdmin):
-    list_display=['post_date','title']
-    ordering=['post_date','title']
+    list_display = ['post_date', 'title']
+    ordering = ['post_date', 'title']
     pass
+
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(StudentUser, StudentAdmin)
@@ -555,4 +556,4 @@ admin.site.register(Subject, SubjectAdmin)
 admin.site.register(SchoolYear, SchoolYearAdmin)
 admin.site.register(Marks, MarksAdmin)
 admin.site.register(MarksRegulary, MarksRegularyAdmin)
-admin.site.register(Notice,NoticeAdmin)
+admin.site.register(Notice, NoticeAdmin)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from appmarks.models import (Department, Teacher, SchoolYear, Classes, Student,
-                             Subject, Lecture, Marks, MarksRegulary, 
+                             Subject, Lecture, Marks, MarksRegulary,
                              AdminClass, LearningOutcomes,
                              Notice)
 from appaccount.serializiers import (UserSerializer, UserSerializerForMarks)
@@ -165,7 +165,7 @@ class MarksSerializerStudent(serializers.ModelSerializer):
         fields = ['id', 'lecture',
                   'mid_st_semester_point', 'end_st_semester_point',
                   'mid_nd_semester_point', 'end_nd_semester_point',
-                   'marksregulary']
+                  'marksregulary']
         # read_only_fields = ['is_public', 'is_locked']
 
 # TOAN BO DIEM CUA MOT MON HOC, 1 LOP
@@ -191,9 +191,42 @@ class MarksSerializerClasses(serializers.ModelSerializer):
                   'mid_nd_semester_point', 'end_nd_semester_point',
                   'marksregulary']
 
-#Notice
+
+# # TOAN BO DIEM CUA 1 lop hoc, tât ca cac mon
+# class StudentSerializerForMarks(serializers.ModelSerializer):
+#     user = UserSerializerForMarks(read_only=True)
+#     # classes = ClassesSerializer(read_only=True)
+
+#     class Meta:
+#         model = Student
+#         fields = ['user', ]
+class LectureAdminClassSerializer(serializers.ModelSerializer):
+    # school_year = SchoolYearSerializer()
+    subject = SubjectSerializer()
+
+    class Meta:
+        model = Lecture
+        fields = ['id', 'subject']
+        read_only_fields = ['id', ]
+
+
+class MarksSerializerAdminClass(serializers.ModelSerializer):
+    marksregulary = MarksRegSerializer(read_only=True, many=True)
+    student = StudentSerializerForMarks(read_only=True)
+    lecture = LectureAdminClassSerializer(read_only=True)
+
+    class Meta:
+        model = Marks
+        fields = ['id', 'student', 'lecture',
+                  'mid_st_semester_point', 'end_st_semester_point',
+                  'mid_nd_semester_point', 'end_nd_semester_point',
+                  'marksregulary']
+
+# Notice
+
+
 class NoticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notice
-        fields = ['id', 'title','content','post_date']
+        fields = ['id', 'title', 'content', 'post_date']
         read_only_fields = ['id', ]

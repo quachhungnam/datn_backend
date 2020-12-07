@@ -17,7 +17,7 @@ from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
     StudentSerializer, LearningOutcomesSerializer, AdminClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer,
-    MarksSerializerStudent, MarksSerializerClasses, NoticeSerializer)
+    MarksSerializerStudent, MarksSerializerClasses, NoticeSerializer,MarksSerializerAdminClass)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 import pandas as pd
@@ -618,7 +618,7 @@ class MarkStudent(generics.ListAPIView):
 
 # diem cua 1 hoc sinh trong 1 nam hoc
 class MarksByYear(generics.ListAPIView):
-    serializer_class = MarksSerializerStudent
+    serializer_class = MarksSerializerAdminClass
 
     def get_queryset(self):
         studentId = self.kwargs['studentId']
@@ -637,7 +637,7 @@ class MarksOfLecture(generics.ListAPIView):
 
 # toan bo diem cua 1 lop' hoc trong 1 nam hoc
 class MarksOfClass(generics.ListAPIView):
-    serializer_class = MarksSerializer
+    serializer_class = MarksSerializerAdminClass
 
     def get_queryset(self):
         class_id = self.kwargs['class_id']
