@@ -400,26 +400,26 @@ class LectureAdmin(admin.ModelAdmin):
     add_marks_class.short_description = "Add mark for all Student of lecture"
 
 
-class LearningOutcomesAdmin(admin.ModelAdmin):
-    list_display = ['student', 'get_fullname',
-                    'get_course_year', 'get_class', 'school_year', ]
-    list_select_related = ['student']
-    search_fields = ['student__user__username',
-                     'student__user__first_name', 'student__user__last_name', ]
-    list_filter = ['school_year']
-    ordering = ['school_year', 'student__classes', 'student', ]
+# class LearningOutcomesAdmin(admin.ModelAdmin):
+#     list_display = ['student',
+#                     'school_year', ]
+#     # list_select_related = ['student']
+#     search_fields = ['student__user__username',
+#                      'student__user__first_name', 'student__user__last_name', ]
+#     list_filter = ['school_year']
+#     ordering = ['school_year', 'student__classes', 'student', ]
 
-    def get_fullname(self, LearningOutcomes):
-        return LearningOutcomes.student.user.last_name+' '+LearningOutcomes.student.user.first_name
-    get_fullname.short_description = 'FULL NAME'
+    # def get_fullname(self, LearningOutcomes):
+    #     return LearningOutcomes.student.user.last_name+' '+LearningOutcomes.student.user.first_name
+    # get_fullname.short_description = 'FULL NAME'
 
-    def get_class(self, LearningOutcomes):
-        return LearningOutcomes.student.classes.class_name
-    get_class.short_description = 'Classes'
+    # def get_class(self, LearningOutcomes):
+    #     return LearningOutcomes.student.classes.class_name
+    # get_class.short_description = 'Classes'
 
-    def get_course_year(self, LearningOutcomes):
-        return LearningOutcomes.student.course_year
-    get_course_year.short_description = 'course year'
+    # def get_course_year(self, LearningOutcomes):
+    #     return LearningOutcomes.student.course_year
+    # get_course_year.short_description = 'course year'
 
 
 class MarksRegInline(admin.StackedInline):
@@ -479,6 +479,7 @@ class MarksRegularyAdmin(admin.ModelAdmin):
     search_fields = ['marks_ref__student__username',
                      'marks_ref__student__last_name', 'marks_ref__student__first_name']
     list_filter = ['semester']
+    list_per_page = 50
 
     def get_fullname(self, obj):
         return obj.marks_ref.student.user.last_name+' '+obj.marks_ref.student.user.first_name
@@ -551,7 +552,7 @@ admin.site.register(ClassesProxy, ClasesProxyAdmin)
 admin.site.register(Lecture, LectureAdmin)
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(AdminClass, AdminClassAdmin)
-admin.site.register(LearningOutcomes, LearningOutcomesAdmin)
+admin.site.register(LearningOutcomes)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(SchoolYear, SchoolYearAdmin)
 admin.site.register(Marks, MarksAdmin)

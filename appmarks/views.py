@@ -17,7 +17,8 @@ from appmarks.serializiers import (
     DepartmentSerializer, TeacherSerializer, SchoolYearSerializer,
     StudentSerializer, LearningOutcomesSerializer, AdminClassSerializer, SubjectSerializer,
     ClassesSerializer, LectureSerializer, MarksSerializer, MarksRegularySerializer,
-    MarksSerializerStudent, MarksSerializerClasses, NoticeSerializer,MarksSerializerAdminClass)
+    MarksSerializerStudent, MarksSerializerClasses, NoticeSerializer, MarksSerializerAdminClass,
+    ConductSerializer)
 from appaccount.serializiers import(UserSerializer)
 from django.http import Http404
 import pandas as pd
@@ -436,6 +437,28 @@ class StudentRecord(generics.ListAPIView):
         studentId = self.kwargs['studentId']
         return LearningOutcomes.objects.filter(student=studentId).order_by('-school_year')
 
+
+class ConductStudent(generics.ListAPIView):
+    serializer_class = ConductSerializer
+
+    def get_queryset(self):
+        # teacher = self.request.user
+        # teacher = self.kwargs['teacher']
+        # schoolyear = self.kwargs['schoolyear']
+        student_id = self.kwargs['student_id']
+        return Student.objects.filter(user=student_id).order_by('learningoutcomes__school_year__from_year')
+
+
+class ConductAllClass(generics.ListAPIView):
+    serializer_class = ConductSerializer
+
+    def get_queryset(self):
+        # teacher = self.request.user
+        # teacher = self.kwargs['teacher']
+        # schoolyear = self.kwargs['schoolyear']
+        class_id = self.kwargs['class_id']
+        return Student.objects.filter(classes=class_id).order_by('learningoutcomes__school_year__from_year')
+
 # class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
 #     serializer_class = ConductSerializer
 
@@ -632,7 +655,7 @@ class MarksOfLecture(generics.ListAPIView):
 
     def get_queryset(self):
         lecture_id = self.kwargs['lecture_id']
-        return Marks.objects.filter(lecture__id=lecture_id).order_by('student__user__first_name')
+        return Marks.objects.filter(lecture__id=lecture_id).order_by('student__user__username')
 
 
 # toan bo diem cua 1 lop' hoc trong 1 nam hoc

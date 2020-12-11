@@ -151,7 +151,8 @@ class LearningOutcomes(models.Model):
         (1, 'Yếu'), (2, 'Trung bình'), (3, 'Khá'), (4, 'Tốt')
     ]
     id = models.BigAutoField(primary_key=True)
-    student = models.ForeignKey(Student, on_delete=models.DO_NOTHING)
+    student = models.ForeignKey(
+        Student, on_delete=models.DO_NOTHING, related_name='learningoutcomes')
     school_year = models.ForeignKey(
         SchoolYear, on_delete=models.DO_NOTHING, related_name='learningoutcomes')
     # st_semester_gpa = models.DecimalField(

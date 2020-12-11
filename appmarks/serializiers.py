@@ -95,6 +95,15 @@ class LearningOutcomesSerializer(serializers.ModelSerializer):
                   'st_semester_conduct', 'nd_semester_conduct', ]
 
 
+class ConductStudentSerializer(serializers.ModelSerializer):
+    school_year = SchoolYearSerializer()
+
+    class Meta:
+        model = LearningOutcomes
+        fields = ['id', 'school_year',
+                  'st_semester_conduct', 'nd_semester_conduct', ]
+
+
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -230,3 +239,15 @@ class NoticeSerializer(serializers.ModelSerializer):
         model = Notice
         fields = ['id', 'title', 'content', 'post_date']
         read_only_fields = ['id', ]
+
+
+# Danh gia hanh kiem
+class ConductSerializer(serializers.ModelSerializer):
+    # student = StudentSerializerForMarks(read_only=True)
+    user = UserSerializerForMarks(read_only=True)
+    learningoutcomes = ConductStudentSerializer(many=True)
+
+    class Meta:
+        model = Student
+        fields = ['user', 'learningoutcomes']
+        # read_only_fields = ['id']

@@ -23,6 +23,8 @@ from appmarks.views import (
     MarksOfClass,
     NoticeView,
     NoticeDetail,
+    ConductStudent,
+    ConductAllClass
 )
 app_name = 'appmarks'
 urlpatterns = [
@@ -58,6 +60,13 @@ urlpatterns = [
          StudentsOfClass.as_view(), name='student-detail2'),
     path('students/lecture/<int:lecture_id>/',
          StudentsOfLecture.as_view(), name='student-detail3'),
+    path('students/<int:student_id>/learningoutcomes/',
+         ConductStudent.as_view(), name='hanhkiem'),
+    path('students/learningoutcomes/classes/<int:class_id>/',
+         ConductAllClass.as_view(), name='hanhkiemcalop'),
+
+
+
 
     path('learningoutcome/', LearningOutcomesView.as_view()),
     path('learningoutcome/<int:pk>/', LearningOutcomesDetail.as_view(),

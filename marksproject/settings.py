@@ -87,16 +87,30 @@ WSGI_APPLICATION = 'marksproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': '35.188.124.216',
+        'HOST': 'localhost',
         'PORT': '3306',
-        'USER': 'quizs',
-        'PASSWORD': '25251325',
-        'NAME': 'mymark'
+        'USER': 'root',
+        'PASSWORD': '25251325Nam',
+        'NAME': 'db_datn'
     },
     'OPTIONS': {
         'init_command': 'SET default_storage_engine=INNODB',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'HOST': '35.188.124.216',
+#         'PORT': '3306',
+#         'USER': 'quizs',
+#         'PASSWORD': '25251325',
+#         'NAME': 'mymark'
+#     },
+#     'OPTIONS': {
+#         'init_command': 'SET default_storage_engine=INNODB',
+#     }
+# }
 
 # DATABASES = {
 #     'default': {
