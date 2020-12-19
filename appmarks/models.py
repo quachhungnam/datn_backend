@@ -5,6 +5,9 @@ from datetime import datetime, date
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from ckeditor.fields import RichTextField
+# from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
+
 
 # Create your models here.
 
@@ -41,6 +44,15 @@ class StudentManager(models.Manager):
         return student
 
 
+class LearningManager(models.Manager):
+    # thuoc tinh cac de ket noi den DB
+    def create(self, student, school_year, st_semester_conduct=None, nd_semester_conduct=None):
+        learning = LearningOutcomes(student=student, school_year=school_year,
+                                    st_semester_conduct=st_semester_conduct, nd_semester_conduct=nd_semester_conduct)
+        learning.save()
+        return learning
+
+
 class Department(models.Model):  # bo mon, bo phan, to^~ nao
     id = models.AutoField(primary_key=True)
     department_name = models.CharField(
@@ -49,6 +61,8 @@ class Department(models.Model):  # bo mon, bo phan, to^~ nao
 
     class Meta:
         db_table = 'department'
+        verbose_name = _('department')
+        verbose_name_plural = _('departments')
 
     def __str__(self):
         return str(self.department_name)
@@ -167,6 +181,7 @@ class LearningOutcomes(models.Model):
         null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 1
     nd_semester_conduct = models.IntegerField(
         null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem hoc ky 2
+    objects = LearningManager()
     # year_conduct = models.IntegerField(
     #     null=True, blank=True, choices=CONDUCT_CHOICES)  # hanh kiem ca nam
 

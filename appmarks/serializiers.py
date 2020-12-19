@@ -87,12 +87,23 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class LearningOutcomesSerializer(serializers.ModelSerializer):
-    school_year = SchoolYearSerializer()
+    # school_year = SchoolYearSerializer(read_only=True)
 
     class Meta:
         model = LearningOutcomes
         fields = ['id', 'student', 'school_year',
                   'st_semester_conduct', 'nd_semester_conduct', ]
+        # read_only_fields = ['school_year']
+
+    def create(self, validated_data):
+        return LearningOutcomes.objects.create(
+            student=validated_data['student'],
+            school_year=validated_data['school_year'],
+            st_semester_conduct=validated_data['st_semester_conduct'],
+            nd_semester_conduct=validated_data['nd_semester_conduct'],
+        )
+
+# lay thong tin hanh kiem cua hoc sinh
 
 
 class ConductStudentSerializer(serializers.ModelSerializer):
@@ -244,7 +255,7 @@ class NoticeSerializer(serializers.ModelSerializer):
 # Danh gia hanh kiem
 class ConductSerializer(serializers.ModelSerializer):
     # student = StudentSerializerForMarks(read_only=True)
-    user = UserSerializerForMarks(read_only=True)
+    user = UserSerializer(read_only=True)
     learningoutcomes = ConductStudentSerializer(many=True)
 
     class Meta:

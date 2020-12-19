@@ -51,6 +51,8 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',#dich
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -219,3 +221,4 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 1000
 
 }
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]

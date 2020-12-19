@@ -27,10 +27,12 @@ from import_export.widgets import ForeignKeyWidget
 from appmarks.views import ImportData
 from datetime import datetime, date
 import decimal
+from django.utils.translation import gettext as _
+
 # Register your models here.
 # SET Header and Title
-admin.site.site_header = 'Management School Administration'
-admin.site.site_title = 'Management School'
+admin.site.site_header = _('Management School Administration')
+admin.site.site_title = _('Management School')
 admin.site.index_title = 'Management School'
 # USER
 

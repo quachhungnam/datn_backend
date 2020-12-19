@@ -24,6 +24,7 @@ from django.http import Http404
 import pandas as pd
 from pandas import ExcelFile
 from datetime import datetime, date
+from django.db.models import Prefetch
 
 # Create your views here.
 
@@ -312,7 +313,7 @@ class StudentsOfClass(generics.ListAPIView):
         classes = self.kwargs['class_id']
         school_year = self.kwargs['school_year_id']
         # schoolyear = self.kwargs['schoolyear']
-        return Student.objects.filter(marks_student__lecture__classes=classes, marks_student__lecture__school_year=school_year).distinct()
+        return Student.objects.filter(marks_student__lecture__classes=classes, marks_student__lecture__school_year=school_year).distinct().order_by("user__username")
 
 
 class StudentsOfLecture(generics.ListAPIView):
@@ -393,6 +394,7 @@ class LearningOutcomesView(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        # print(request.data)
         serializer = LearningOutcomesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -415,7 +417,7 @@ class LearningOutcomesDetail(APIView):
     def patch(self, request, pk, format=None):
         LearningOutcomes = self.get_object(pk)
         serializier = LearningOutcomesSerializer(
-            LearningOutcomes, data=request.data)
+            LearningOutcomes, data=request.data, partial=True)
         if serializier.is_valid():
             serializier.save()
             return Response(serializier.data)
@@ -457,7 +459,12 @@ class ConductAllClass(generics.ListAPIView):
         # teacher = self.kwargs['teacher']
         # schoolyear = self.kwargs['schoolyear']
         class_id = self.kwargs['class_id']
-        return Student.objects.filter(classes=class_id).order_by('learningoutcomes__school_year__from_year')
+        # return Student.objects.filter(classes=class_id).order_by('learningoutcomes__school_year__from_year')
+        return Student.objects.filter(classes=class_id).prefetch_related(
+            Prefetch('learningoutcomes',
+                     queryset=LearningOutcomes.objects.all())
+        )
+        # return Student.objects.filter(classes=class_id).select_related("classes")
 
 # class StudentsOfClass(generics.ListAPIView):  # lay danh sach hoc sinh cua 1 lop
 #     serializer_class = ConductSerializer
